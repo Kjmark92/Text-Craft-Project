@@ -11,8 +11,9 @@ require(tidyverse)
 require(keras)
 require(jsonlite)
 
+###############################
 
-#Fetch Data
+# Newyork times data
 
 NYTIMES_KEY="bivqAnNUnxs6CmliCOFeAbuMBIYVPHdn"
 
@@ -44,15 +45,76 @@ allNYTSearch[[6]][1]
 
 ###############################
 
+# fitbit data
+
+
+library(httr)
+
+library(curl)
+
+# Read Fitbit token from file
+token <- "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkJKWkQiLCJzdWIiOiI4N0NHS1AiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdhY3Qgd3NldCB3bG9jIiwiZXhwIjoxNTgwMDgxMzk1LCJpYXQiOjE1Nzk0NzY3MjN9.MWvB0DNySre6ZcTxaoExMiJxi1Wg20j5nyO2tzA4CJE"
+
+h <- new_handle()
+
+handle_setheaders(
+    h,
+    'Authorization' = paste('Bearer', token)
+)
+
+
+date <- '2017-12-25'
+
+# open the curl connection
+hr.connection <- curl(
+    paste0('https://api.fitbit.com/1/user/-/activities/heart/date/', date, '/1d/1min.json'), 
+    handle = h
+)
+
+library(jsonlite)
+
+# read to string object
+# turn off warnings for no end-of-line character on final line
+hr.string <- readLines( hr.connection, warn = FALSE )
+
+hr.content <- fromJSON( hr.string )
+str(hr.content)
+
+hr.content$`activities-heart`
+
+
+###############################
+
+# fitbit data outh way
+
+
+
+key <- "22BJZD"
+secret <- "e015dc3261c64d95d505c9f2f86845f7"
+fbr <- oauth_app('FitteR',key,secret)
+
+accessTokenURL <-  'https://api.fitbit.com/oauth2/token'
+authorizeURL <- 'https://www.fitbit.com/oauth2/authorize'
+fitbit <- oauth_endpoint(authorize = authorizeURL, access = accessTokenURL)
+
+token <- oauth2.0_token(fitbit,fbr, scope=c("activity", "heartrate", "sleep"), use_basic_auth = FALSE)#, oob_value = "https://www.shinyapps.io/",use_oob = TRUE)
+token <- "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkJKWkQiLCJzdWIiOiI4N0NHS1AiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdhY3Qgd3NldCB3bG9jIiwiZXhwIjoxNTgwMDgxMzk1LCJpYXQiOjE1Nzk0NzY3MjN9.MWvB0DNySre6ZcTxaoExMiJxi1Wg20j5nyO2tzA4CJE"
+conf <- config(token = token)
+
+
+
+# https://cran.r-project.org/web/packages/httr/vignettes/quickstart.html
+
+resp <- GET("https://api.fitbit.com/1/user/-/sleep/date/2019-06-30.json", config=conf)
+cont <- content(resp, "parsed")
+str(cont)
 
 
 
 
+###############################
 
-
-
-
-
+# 
 
 
 
