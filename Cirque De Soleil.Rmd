@@ -28,7 +28,7 @@ token <- content(res)$access_token
 
 #Search the ids related to cirque shows in LV and create it in id_names dataframes
 yelp <- "https://api.yelp.com"
-term <- "Cirque"
+term <- "cirque du soleil"
 location <- "LAS VEGAS, NV"
 categories <- NULL
 limit <- 50
@@ -104,6 +104,7 @@ url_rev <- function(id){
 
 #Test before looping with functions
 url_rev(id_names[1,1])
+
 url = paste0(yelp2, id_names[1,1], "/reviews")
 res <- GET(url, add_headers('Authorization' = paste("bearer", client_secret)))
 results <- content(res)
@@ -111,7 +112,7 @@ results_list <- lapply(results$reviews, FUN = review_httr_parse)
 id_reviews <- do.call("rbind", results_list)
 
 #When everything works, loop the ids
-for (x in id_list){
-  url_rev(x)
-}
+#for (x in id_list){
+#  url_rev(x)
+#}
 ```
