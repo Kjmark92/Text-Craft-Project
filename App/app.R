@@ -10,117 +10,7 @@ require(ggplot2)
 require(tidyverse)
 require(keras)
 require(jsonlite)
-
-###############################
-
-# Newyork times data
-
-NYTIMES_KEY="bivqAnNUnxs6CmliCOFeAbuMBIYVPHdn"
-
-
-# Let's set some parameters
-term <- "central+park+jogger" # Need to use + to string together separate words
-
-baseurl <- paste0("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=",term,
-                  "&facet_filter=true&api-key=",NYTIMES_KEY, sep="")
-
-
-initialQuery <- fromJSON(baseurl)
-maxPages <- round((initialQuery$response$meta$hits[1] / 10)-1) 
-
-
-pages <- list()
-#6 pages
-for(i in 0:5){
-    nytSearch <- fromJSON(paste0(baseurl, "&page=", i), flatten = TRUE) %>% data.frame() 
-    message("Retrieving page ", i)
-    pages[[i+1]] <- nytSearch 
-    Sys.sleep(1) 
-}
-
-
-allNYTSearch <- rbind_pages(pages)
-
-allNYTSearch[[6]][1]
-
-###############################
-
-# fitbit data
-
-
-library(httr)
-
-library(curl)
-
-# Read Fitbit token from file
-token <- "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkJKWkQiLCJzdWIiOiI4N0NHS1AiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdhY3Qgd3NldCB3bG9jIiwiZXhwIjoxNTgwMDgxMzk1LCJpYXQiOjE1Nzk0NzY3MjN9.MWvB0DNySre6ZcTxaoExMiJxi1Wg20j5nyO2tzA4CJE"
-
-h <- new_handle()
-
-handle_setheaders(
-    h,
-    'Authorization' = paste('Bearer', token)
-)
-
-
-date <- '2017-12-25'
-
-# open the curl connection
-hr.connection <- curl(
-    paste0('https://api.fitbit.com/1/user/-/activities/heart/date/', date, '/1d/1min.json'), 
-    handle = h
-)
-
-library(jsonlite)
-
-# read to string object
-# turn off warnings for no end-of-line character on final line
-hr.string <- readLines( hr.connection, warn = FALSE )
-
-hr.content <- fromJSON( hr.string )
-str(hr.content)
-
-hr.content$`activities-heart`
-
-
-###############################
-
-# fitbit data outh way
-
-
-
-key <- "22BJZD"
-secret <- "e015dc3261c64d95d505c9f2f86845f7"
-fbr <- oauth_app('FitteR',key,secret)
-
-accessTokenURL <-  'https://api.fitbit.com/oauth2/token'
-authorizeURL <- 'https://www.fitbit.com/oauth2/authorize'
-fitbit <- oauth_endpoint(authorize = authorizeURL, access = accessTokenURL)
-
-token <- oauth2.0_token(fitbit,fbr, scope=c("activity", "heartrate", "sleep"), use_basic_auth = FALSE)#, oob_value = "https://www.shinyapps.io/",use_oob = TRUE)
-token <- "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkJKWkQiLCJzdWIiOiI4N0NHS1AiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdhY3Qgd3NldCB3bG9jIiwiZXhwIjoxNTgwMDgxMzk1LCJpYXQiOjE1Nzk0NzY3MjN9.MWvB0DNySre6ZcTxaoExMiJxi1Wg20j5nyO2tzA4CJE"
-conf <- config(token = token)
-
-
-
-# https://cran.r-project.org/web/packages/httr/vignettes/quickstart.html
-
-resp <- GET("https://api.fitbit.com/1/user/-/sleep/date/2019-06-30.json", config=conf)
-cont <- content(resp, "parsed")
-str(cont)
-
-
-
-
-###############################
-
-# 
-
-
-
-
-
-
+require(DT)
 
 
 ##########################################################################
@@ -152,7 +42,11 @@ body <- dashboardBody(
         tabItem(tabName="t2",
                 fluidRow(
                     box(title = span('Enter API link',style="font-size:20px") , textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), height = 150,solidHeader = TRUE,width = 2,background = "black" ),
-                    box(title = span('Query',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ))),
+                    box(title = span('Query',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
+                    box(title = span('Upload File',style= "font-size:20px"),fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),height = 150,solidHeader = TRUE,width = 2,background = "black" ),
+                    actionButton("runif", "Load Data"),
+                    actionButton("reset", "Clear"), 
+                    box(title = span('Contents',style = "font-size:20px"),column(width = 12,DT::dataTableOutput("contents"),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8,status = "primary"))),
                     
         
         #third tab 
@@ -171,7 +65,15 @@ body <- dashboardBody(
     ))
 
 
+
+
+
 ui <- dashboardPage(header,sidebar,body,title = "URAT")
+
+
+
+
+
 
 
 server <- function(input, output){
@@ -189,6 +91,37 @@ server <- function(input, output){
     output$projinfo <- renderText({
         "hi"
     })
+    
+    
+    
+    v <- reactiveValues(data = NULL)
+    
+    observeEvent(input$runif, {
+        api <- input$apilink
+        inFile <- input$file1
+        
+        if(is.null(inFile) && api == "") {
+            v$data <- NULL
+        }
+        else{
+            v$data <- 1
+        }
+        
+    })
+    
+    observeEvent(input$reset, {
+        v$data <- NULL
+    })  
+    
+    
+    output$contents <- renderDataTable({
+        api <- input$apilink
+        inFile <- input$file1
+        if (is.null(v$data))
+            return(NULL)
+        datatable(read.csv(inFile$datapath), options = list(paging = FALSE))
+    })
+    
     
 }
 
