@@ -59,9 +59,6 @@ body <- dashboardBody(
         tabItem(tabName="t4",
                 fluidRow(
                     box(title= span('Contact Info',style="font-size:20px"),uiOutput("moreinfo1"),height = 150,width = 12,solidHeader = TRUE,status="primary")))
-        
-        
-        
     ))
 
 
