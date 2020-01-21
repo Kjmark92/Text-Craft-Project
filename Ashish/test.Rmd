@@ -54,7 +54,7 @@ library(httr)
 library(curl)
 
 # Read Fitbit token from file
-token <- "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkJKWkQiLCJzdWIiOiI4N0NHS1AiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdhY3Qgd3NldCB3bG9jIiwiZXhwIjoxNTgwMDgxMzk1LCJpYXQiOjE1Nzk0NzY3MjN9.MWvB0DNySre6ZcTxaoExMiJxi1Wg20j5nyO2tzA4CJE"
+token <- "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkJKWDYiLCJzdWIiOiI2NFRKUEsiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd3BybyB3bnV0IHdzbGUgd3dlaSB3c29jIHdzZXQgd2FjdCB3bG9jIiwiZXhwIjoxNjExMDg5Mzg5LCJpYXQiOjE1Nzk1NTMzODl9.FzVyK6QPRCG5uCeoCVFz8911OGDZq-5QYc6qOZe71mA"
 
 h <- new_handle()
 
@@ -64,7 +64,7 @@ handle_setheaders(
 )
 
 
-date <- '2017-12-25'
+date <- '2019-12-25'
 
 # open the curl connection
 hr.connection <- curl(
@@ -81,7 +81,7 @@ hr.string <- readLines( hr.connection, warn = FALSE )
 hr.content <- fromJSON( hr.string )
 str(hr.content)
 
-hr.content$`activities-heart`
+hr.content$`activities-heart-intraday`$dataset
 
 
 ###############################
