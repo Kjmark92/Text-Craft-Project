@@ -11,8 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r results='hide', message=FALSE, warning=FALSE}
 library(tidyverse)
+library(readr)
 ```
 
 ```{r, warning=FALSE}
+Cirque_Train <- read_csv("Data/Cirque_Train.csv")
+```
 
+```{r, warning=FALSE}
+nrow(Cirque_Train)
 ```
