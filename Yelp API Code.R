@@ -1,21 +1,7 @@
----
-title: "Cirque"
-author: "Any"
-date: "1/17/2020"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r results='hide', message=FALSE, warning=FALSE}
 library(httr)
 library(jsonlite)
 library(tidyverse)
-```
 
-```{r}
 #Setup Yelp API
 client_id <- "y0uHSQoir3gtmewwyYhLeA"
 client_secret <- "IrNmBfj70C4h6bFYX7R5SWn_aHGNq01roJCA1RfX6Dy01k2W_FrXpx_VLxGHgfdS8YJhAYMYFavoEI8sQLnzy7e0lMovmn6ibFxMzu-GamnZiYIN5QTZ9NNa7BQiXnYx"
@@ -34,10 +20,10 @@ categories <- NULL
 limit <- 50
 radius <- 8800
 url_id <- modify_url(yelp, path = c("v3", "businesses", "search"),
-                  query = list(term = term, 
-                               location = location,
-                               limit = limit,
-                               radius = radius))
+                     query = list(term = term, 
+                                  location = location,
+                                  limit = limit,
+                                  radius = radius))
 res <- GET(url_id, add_headers('Authorization' = paste("bearer", client_secret)))
 results <- content(res)
 
@@ -73,9 +59,7 @@ id_names <- do.call("rbind", results_list)
 id_names <- id_names %>%
   filter(str_detect(name, "Cirque")) %>%
   select(id, name, rating, review_count)
-```
 
-```{r}
 #Per Cirque's ids request the reviews
 id_list <- id_names[1]
 yelp2 <- "https://api.yelp.com/v3/businesses/"
@@ -115,4 +99,4 @@ id_reviews <- do.call("rbind", results_list)
 #for (x in id_list){
 #  url_rev(x)
 #}
-```
+
