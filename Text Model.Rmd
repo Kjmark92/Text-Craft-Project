@@ -12,12 +12,42 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r results='hide', message=FALSE, warning=FALSE}
 library(tidyverse)
 library(readr)
+library(tidytext)
+library(textmineR)
+
+#select corpus and response variables
+cirque <- read_csv("Data/Cirque_Train.csv")
+corpus <- cirque$Text
+response <- cirque$Show
+no_grams = 2
+
+#create train model
+model <- tibble::tibble(corpus, response)
+train <- model %>%
+  group_by(response) %>%
+  unnest_tokens(word, corpus, token = "ngrams", n = no_grams) %>%
+  ungroup()
 ```
 
 ```{r, warning=FALSE}
-Cirque_Train <- read_csv("Data/Cirque_Train.csv")
+#Karina's Trying Stuff (cleaning data)
+train$word <- gsub('[[:punct:]]+', 'NA', train$word)
+train$word <- gsub('[[:digit:]]+', 'NA', train$word)
+
+customWords <- tibble(omit = unique(train$response))
+customWords <- customWords %>%
+  unnest_tokens(word, omit) %>%
+  distinct()
+
+train <- train %>%
+  separate(word, c("word1", "word2"), sep = " ", remove = F) %>%
+  filter(!word1 %in% stop_words$word, !word2 %in% stop_words$word, !word1 %in% customWords$word, !word2 %in% customWords$word, !word1 %in% "NA", !word2 %in% "NA") %>%
+  ungroup()
+  
 ```
 
-```{r, warning=FALSE}
-nrow(Cirque_Train)
+```{r}
+dtm <- CreateDtm(train$word, 
+                 doc_names = train$response, 
+                 ngram_window = c(1, 2))
 ```
