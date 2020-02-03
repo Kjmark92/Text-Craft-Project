@@ -1,0 +1,57 @@
+---
+title: "Cirque"
+author: "Any"
+date: "1/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readr)
+library(tidytext)
+#library(textmineR)
+
+#select corpus and response variables for any data
+cirque <- read_csv("Data/Cirque_Train.csv")
+corpus <- cirque$Text
+response <- cirque$Show
+
+#create train model
+model <- tibble::tibble(corpus, response)
+```
+
+```{r, warning=FALSE}
+#Karina's Trying Stuff (cleaning data)
+train <- model %>%
+  group_by(response) %>%
+  unnest_tokens(word, corpus, token = "ngrams", n = 1) %>%
+  ungroup()
+train$word <- gsub('[[:punct:]]+', 'NA', train$word)
+train$word <- gsub('[[:digit:]]+', 'NA', train$word)
+
+#Put titles words into a dataframe
+customWords <- tibble(omit = unique(train$response))
+customWords <- customWords %>%
+  unnest_tokens(word, omit) %>%
+  distinct()
+
+#train <- train %>%
+#  separate(word, c("word1", "word2"), sep = " ", remove = F) %>%
+#  filter(!word1 %in% stop_words$word, !word2 %in% stop_words$word, !word1 %in% customWords$word, !word2 %in% #customWords$word, !word1 %in% "NA", !word2 %in% "NA") %>%
+#  ungroup()
+
+#Remove stop words and title words
+train <- train %>%
+  filter(!word %in% stop_words$word, !word %in% customWords$word, !word %in% "NA") %>%
+  ungroup()
+```
+
+```{r}
+dtm <- CreateDtm(train$word, 
+                 doc_names = train$response, 
+                 ngram_window = c(1, 2))
+```
