@@ -1,0 +1,163 @@
+---
+title: "Combine"
+author: "Any"
+date: "2/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidytext)
+library(scales)
+library(textstem)
+
+#select corpus and response variables
+cirque <- read_csv("Data/Cirque_Train.csv")
+corpus <- cirque$Text
+response <- cirque$Show
+#ratings <- 
+
+#corpus <- med text
+#response <- med response
+#ratings <- med ratings
+
+#create train model
+model <- tibble::tibble(corpus, response)
+```
+
+```{r, warning=FALSE}
+#Unigram and remove numbers and punctuations
+clean_model <- model %>%
+  mutate(id = row_number()) %>%
+  group_by(response) %>%
+  unnest_tokens(word, corpus, token = "ngrams", n = 1) %>%
+  ungroup()
+clean_model$word <- gsub('[[:punct:]]+', 'NA', clean_model$word)
+clean_model$word <- gsub('[[:digit:]]+', 'NA', clean_model$word)
+
+#root form
+clean_model <- clean_model %>%
+  mutate(word = lemmatize_words(word))
+
+#Put titles words into a dataframe
+titleWords <- tibble(omit = unique(clean_model$response))
+titleWords <- titleWords %>%
+  unnest_tokens(word, omit) %>%
+  distinct()
+
+#Remove stop words and title words
+clean_model <- clean_model %>%
+  filter(!word %in% stop_words$word, !word %in% titleWords$word, !word %in% "NA") %>%
+  ungroup()
+
+#Show top 10 words that were most used in all documents
+#Provide to user to select which words the user doesn't want to show
+wordCount <- clean_model %>%
+  count(word,sort = TRUE) %>%
+  slice(1:20)
+
+clean_model <- clean_model %>%
+  filter(!word %in% wordCount$word) %>%
+  mutate(ind = row_number())
+```
+
+```{r, warning=FALSE}
+tokens <- clean_model %>% 
+  select(id, word, response) %>%
+  group_by(id) %>%
+  mutate(ind = row_number()) %>%
+  spread(key = ind, value = word)
+tokens [is.na(tokens)] <- ""
+tokens <- unite(tokens, text,-id, -response, sep =" " )
+```
+
+```{r, message=FALSE}
+#create DTM
+#we can do this using Tidytext and Tm
+
+prueba <- tokens %>%
+  unnest_tokens(word,text) %>%
+  count(id,word)
+
+tokens %>%
+  select(text) %>%
+  unnest_tokens(word,text) %>%
+  count(word,sort = TRUE)
+
+dtm_prueba <- prueba %>%
+  cast_dtm(id, word, n)
+
+
+tokens %>%
+  ungroup() %>%
+    select(text) %>%
+  unnest_tokens(word,text) %>%
+  count(word,sort = TRUE) %>%
+  top_n(100)
+  
+
+#prueba %>%
+#  cast_dfm(id, word, n)
+
+
+##explore the basic frequency
+#tf <- TermDocFreq(dtm = dtm)
+#original_tf <- tf %>% select(term, term_freq,doc_freq)
+#rownames(original_tf) <- 1:nrow(original_tf)
+## Eliminate words appearing less than 2 times or in more than half of the
+## documents
+#vocabulary <- tf$term[ tf$term_freq > 1 & tf$doc_freq < nrow(dtm) / 2 ]
+#dtm = dtm
+#
+
+library(topicmodels)
+
+ap_lda <- LDA(dtm_prueba, k = 10, control = list(seed = 1234))
+ap_lda
+
+library(tidytext)
+
+ap_topics <- tidy(ap_lda, matrix = "beta")
+ap_topics
+
+
+library(ggplot2)
+library(dplyr)
+
+ap_top_terms <- ap_topics %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+ap_top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+
+
+beta_spread <- ap_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  spread(topic, beta) %>%
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_spread
+
+
+beta_spread %>%
+  top_n(25) %>%
+  ggplot(aes(term, log_ratio)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_x_reordered()
+
+```

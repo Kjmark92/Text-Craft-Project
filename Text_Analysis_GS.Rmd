@@ -69,21 +69,23 @@ tokens <- text_cleaning_tokens %>% filter(!(word==""))
 tokens <- tokens %>% mutate(ind = row_number())
 
 
-tokens <- tokens %>% 
-  select(id,word,id) %>%
-  group_by(id) %>% 
+tokens <- clean_model %>% 
+  select(id, word, response) %>%
+  group_by(id) %>%
   mutate(ind = row_number()) %>%
   spread(key = ind, value = word)
-
-
-#Remove NAs
 tokens [is.na(tokens)] <- ""
+tokens <- unite(tokens, text,-id, -response, sep =" " )
 
-#Join texts again
-tokens <- unite(tokens, text,-id,sep =" " )
-
-# Leave only the clean text and id.
-tokens$text <- trimws(tokens$text)
+#Adjust the code to include response varaible
+#tokens <- tokens %>% 
+#  select(id,word,id) %>%
+#  group_by(id) %>% 
+#  mutate(ind = row_number()) %>%
+#  spread(key = ind, value = word)
+#tokens [is.na(tokens)] <- ""
+#tokens <- unite(tokens, text,-id,sep =" " )
+#tokens$text <- trimws(tokens$text)
 ```
 
 #### Model
