@@ -36,6 +36,7 @@ clean_model <- model %>%
   group_by(response) %>%
   unnest_tokens(word, corpus, token = "ngrams", n = 1) %>%
   ungroup()
+
 clean_model$word <- gsub('[[:punct:]]+', 'NA', clean_model$word)
 clean_model$word <- gsub('[[:digit:]]+', 'NA', clean_model$word)
 
@@ -71,6 +72,8 @@ tokens <- clean_model %>%
   group_by(id) %>%
   mutate(ind = row_number()) %>%
   spread(key = ind, value = word)
+
+
 tokens [is.na(tokens)] <- ""
 tokens <- unite(tokens, text,-id, -response, sep =" " )
 ```
@@ -99,7 +102,6 @@ tokens %>%
   count(word,sort = TRUE) %>%
   top_n(100)
   
-
 #prueba %>%
 #  cast_dfm(id, word, n)
 

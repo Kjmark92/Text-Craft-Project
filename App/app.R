@@ -11,12 +11,9 @@ require(tidyverse)
 require(keras)
 require(jsonlite)
 require(DT)
-
+require(shinyjs)
 
 ##########################################################################
-
-
-
 
 header <- dashboardHeader(
     title = span("URAT",style = "font-size:25px"),
@@ -25,13 +22,9 @@ header <- dashboardHeader(
 
 sidebar <- dashboardSidebar(sidebarMenuOutput('menu'), width = 160)
 
-
 body <- dashboardBody(
-    
     tags$style(make_css(list('.box',c('font-size'),c('13px')))),
-    
     #shinyDashboardThemes(theme = "grey_dark"),
-    
     tabItems(
         # homepage tab content
         tabItem(tabName="t1",
@@ -41,11 +34,12 @@ body <- dashboardBody(
         ## second tab content
         tabItem(tabName="t2",
                 fluidRow(
-                    box(title = span('Enter API link',style="font-size:20px") , textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), height = 150,solidHeader = TRUE,width = 2,background = "black" ),
-                    box(title = span('Query',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
-                    box(title = span('Upload File',style= "font-size:20px"),fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),height = 150,solidHeader = TRUE,width = 2,background = "black" ),
-                    actionButton("runif", "Load Data"),
-                    actionButton("reset", "Clear"), 
+                    box(title = span('Enter API link',style="font-size:20px") , textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), height = 150,solidHeader = TRUE,width = 4,background = "black" ),
+                    #box(title = span('Query',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
+                    box(title = span('Upload File',style= "font-size:20px"),fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),height = 150,solidHeader = TRUE,width = 4,background = "black" ),
+                    actionButton("runif", "Load Data",style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    actionButton("reset", "Clear",style="color: #fff; background-color: #337ab7; border-color: #2e6da4")), 
+                fluidRow(
                     box(title = span('Contents',style = "font-size:20px"),column(width = 12,DT::dataTableOutput("contents"),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8,status = "primary"))),
                     
         
@@ -64,18 +58,11 @@ body <- dashboardBody(
 
 
 
-
 ui <- dashboardPage(header,sidebar,body,title = "URAT")
-
-
-
-
-
-
 
 server <- function(input, output){
     
-    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 't1'),menuItem(text= span('API Call',style="font-size:18px"),tabName = "t2"),menuItem(text= span('Initiate Action',style="font-size:18px"),tabName = "t3"),menuItem(text= span('Contact Info',style="font-size:18px"),tabName = "t4") ) })  
+    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 't1'),menuItem(text= span('Load Data',style="font-size:18px"),tabName = "t2"),menuItem(text= span('Topic Modelling',style="font-size:18px"),tabName = "t3"),menuItem(text= span('Contact Info',style="font-size:18px"),tabName = "t4") ) })  
     
     output$moreinfo1 <- renderUI({
         HTML(paste("<p>","To get more details on this project, please visit the following link-","<br>"),
@@ -86,41 +73,51 @@ server <- function(input, output){
     
     
     output$projinfo <- renderText({
-        "hi"
+        #t <- print(source("Get_API_Response.R")[["value"]])
+        #datatable(t)
+        "Welcome to the FUTURE!"
+        
     })
-    
-    
     
     v <- reactiveValues(data = NULL)
     
     observeEvent(input$runif, {
         api <- input$apilink
         inFile <- input$file1
-        
         if(is.null(inFile) && api == "") {
             v$data <- NULL
         }
         else{
             v$data <- 1
         }
-        
     })
     
     observeEvent(input$reset, {
         v$data <- NULL
+        reset("apilink")
+        reset("file1")
     })  
     
     
     output$contents <- renderDataTable({
         api <- input$apilink
         inFile <- input$file1
-        if (is.null(v$data))
+        if (is.null(v$data)){
             return(NULL)
-        datatable(read.csv(inFile$datapath), options = list(paging = FALSE))
+        }
+        if (api == "" && v$data == 1){
+            datatable(read.csv(inFile$datapath), options = list(paging = FALSE))
+        }
+        else {
+            source("Get_API_Response.R")
+            datatable(test_api(api))
+        }
     })
-    
-    
 }
+
+
+
+
 
 shinyApp(ui,server)
 

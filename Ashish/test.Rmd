@@ -9,9 +9,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r }
 
-
-
-
 ###############################
 
 # Newyork times data
