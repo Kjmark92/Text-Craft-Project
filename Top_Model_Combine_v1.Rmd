@@ -15,17 +15,18 @@ library(tidytext)
 library(scales)
 library(textstem)
 
-cirque <- read_csv("Data/Cirque_Train.csv")
+#cirque <- read_csv("Data/Cirque_Train.csv")
+med <- read_csv("Ghislene/Data/drug_combine.csv")
 ```
 
 ```{r results='hide', message=FALSE, warning=FALSE}
 #Shiny input variables
-corpus <- cirque$Text
-response <- cirque$Show
+#corpus <- cirque$Text
+#response <- cirque$Show
 #ratings <- 
 
-#corpus <- med text
-#response <- med response
+corpus <- med$comment
+response <- med$drug_name
 #ratings <- med ratings
 
 #Shiny other input values
