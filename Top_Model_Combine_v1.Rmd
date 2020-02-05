@@ -15,8 +15,11 @@ library(tidytext)
 library(scales)
 library(textstem)
 
-#select corpus and response variables
 cirque <- read_csv("Data/Cirque_Train.csv")
+```
+
+```{r results='hide', message=FALSE, warning=FALSE}
+#Shiny input variables
 corpus <- cirque$Text
 response <- cirque$Show
 #ratings <- 
@@ -25,16 +28,27 @@ response <- cirque$Show
 #response <- med response
 #ratings <- med ratings
 
-#create train model
-model <- tibble::tibble(corpus, response)
+#Shiny other input values
+#n_grams can be either 1 or 2
+n_grams = 1
+
+#optimize K as a suggestion and allow users to choose K number
+k_value = 10
+
+#allow users to pick the percentage of words used in the document (suggest 50,60,70 percentages)
+#remove words that per repeated more than those percentage
+repeatPerc = .50
 ```
 
 ```{r, warning=FALSE}
+#create train model
+model <- tibble::tibble(corpus, response)
+
 #Unigram and remove numbers and punctuations
 clean_model <- model %>%
   mutate(id = row_number()) %>%
   group_by(response) %>%
-  unnest_tokens(word, corpus, token = "ngrams", n = 1) %>%
+  unnest_tokens(word, corpus, token = "ngrams", n = n_grams) %>%
   ungroup()
 
 clean_model$word <- gsub('[[:punct:]]+', 'NA', clean_model$word)
@@ -50,20 +64,27 @@ titleWords <- titleWords %>%
   unnest_tokens(word, omit) %>%
   distinct()
 
-#Remove stop words and title words
+#Remove stop words and title words and NA words
 clean_model <- clean_model %>%
   filter(!word %in% stop_words$word, !word %in% titleWords$word, !word %in% "NA") %>%
   ungroup()
 
-#Show top 10 words that were most used in all documents
-#Provide to user to select which words the user doesn't want to show
+#the percentage of words that were repeated
 wordCount <- clean_model %>%
   count(word,sort = TRUE) %>%
-  slice(1:20)
+  mutate(perc = n / sum(n) * 100, value = if_else(perc > repeatPerc, "TRUE", "FALSE")) %>%
+  filter(value == "TRUE")
 
+#remove the repeated words
 clean_model <- clean_model %>%
   filter(!word %in% wordCount$word) %>%
   mutate(ind = row_number())
+```
+
+```{r, warning=FALSE}
+#Shiny Output
+#show the user the repeated words that will be removed based on this percentage criteria
+wordCount
 ```
 
 ```{r, warning=FALSE}
@@ -118,7 +139,7 @@ tokens %>%
 
 library(topicmodels)
 
-ap_lda <- LDA(dtm_prueba, k = 10, control = list(seed = 1234))
+ap_lda <- LDA(dtm_prueba, k = k_value, control = list(seed = 1234))
 ap_lda
 
 library(tidytext)
