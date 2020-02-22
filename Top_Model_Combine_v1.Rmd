@@ -27,6 +27,7 @@ corpus <- cirque$Text
 response <- cirque$Show
 #ratings <- 
 
+
 #corpus <- med$comment
 #response <- med$drug_name
 #ratings <- med ratings
@@ -77,13 +78,12 @@ if (n_grams == 1){
   #the percentage of words that were repeated
   wordCount <- clean_model %>%
     count(word,sort = TRUE) %>%
-    mutate(perc = n / sum(n) * 100, value = if_else(perc > repeatPerc, "TRUE", "FALSE")) %>%
-    filter(value == "TRUE")
-
-  #remove the repeated words
-  clean_model <- clean_model %>%
-    filter(!word %in% wordCount$word) %>%
-    mutate(ind = row_number())
+    mutate(perc = (n / sum(n)) * 100, value = if_else(perc > repeatPerc, "TRUE", "FALSE"))
+  
+#  #remove the repeated words
+#  clean_model <- clean_model %>%
+#    filter(!word %in% wordCount$word) %>%
+#    mutate(ind = row_number())
 }
 
 if (n_grams == 2){
@@ -102,13 +102,12 @@ if (n_grams == 2){
   #the percentage of words that were repeated
   wordCount <- clean_model %>%
     count(word,sort = TRUE) %>%
-    mutate(perc = n / sum(n) * 100, value = if_else(perc > repeatPerc, "TRUE", "FALSE")) %>%
-    filter(value == "TRUE")
+    mutate(perc = (n / sum(n)) * 100, value = if_else(perc > repeatPerc, "TRUE", "FALSE"))
   
-  #remove the repeated words
-  clean_model <- clean_model %>%
-    filter(!word %in% wordCount$word) %>%
-    mutate(ind = row_number())
+#  #remove the repeated words
+#  clean_model <- clean_model %>%
+#    filter(!word %in% wordCount$word) %>%
+#    mutate(ind = row_number())
 }
 
 ```

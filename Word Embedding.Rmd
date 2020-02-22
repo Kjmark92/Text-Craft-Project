@@ -1,0 +1,187 @@
+
+
+```{r}
+library(purrr)
+library(text2vec)
+library(dplyr)
+library(keras)
+install.packages("text2vec")
+```
+
+```{r}
+#high beta terms per topic (ap_top_terms), and clean text from top model combine rmd
+#ap_top_terms = ap_top_terms
+#tokens = tokens
+```
+
+```{r}
+#pick top number of words to generate titles
+#suggest 20K (rows)
+word_max = 20000
+#Dimension of the embedding vector
+#suggest above 200 (columns)
+embedding_size <- 200
+set.seed(1234)
+```
+
+```{r}
+tokenizer <- text_tokenizer(num_words = word_max, lower=TRUE, split=' ', char_level=FALSE) %>%
+  fit_text_tokenizer(tokens$text)
+
+skipgrams_generator <- function(text, tokenizer, window_size) {
+  gen <- texts_to_sequences_generator(tokenizer, sample(text))
+  function() {
+    skip <- generator_next(gen) %>%
+      skipgrams(
+        vocabulary_size = tokenizer$num_words, 
+        window_size = window_size, 
+        negative_samples = 1
+      )
+    x <- transpose(skip$couples) %>% map(. %>% unlist %>% as.matrix(ncol = 1))
+    y <- skip$labels %>% as.matrix(ncol = 1)
+    list(x, y)
+  }
+}
+```
+
+```{r}
+skip_window <- 4
+num_sampled <- 2   
+input_target <- layer_input(shape = 1)
+input_context <- layer_input(shape = 1)
+
+embedding <- layer_embedding(
+  input_dim = tokenizer$num_words + 1, 
+  output_dim = embedding_size, 
+  input_length = 1, 
+  name = "embedding"
+)
+
+target_vector <- input_target %>% 
+  embedding() %>% 
+  layer_flatten()
+
+context_vector <- input_context %>%
+  embedding() %>%
+  layer_flatten()
+
+```
+
+```{r}
+dot_product <- layer_dot(list(target_vector, context_vector), axes = 1)
+output <- layer_dense(dot_product, units = 1, activation = "sigmoid")
+
+model <- keras_model(list(input_target, input_context), output)
+model %>% compile(loss = "binary_crossentropy", optimizer = "adam", metric = c("accuracy"))
+
+summary(model)
+```
+
+```{r}
+steps <- round(word_max/20,0)
+modelT <- model %>%
+  fit_generator(
+    skipgrams_generator(tokens$text, tokenizer, skip_window),
+    steps_per_epoch = steps, epochs = 4)
+```
+
+```{r}
+words <- data_frame(
+  word = names(tokenizer$word_index), 
+  id = as.integer(unlist(tokenizer$word_index)))
+
+words <- words %>%
+  filter(id <= tokenizer$num_words) %>%
+  arrange(id)
+
+embedding_matrix <- get_weights(model)[[1]]
+embedding_matrix <- embedding_matrix[0:nrow(words)+1,]
+
+row.names(embedding_matrix) <- c("UNK", words$word)
+
+find_similar_words <- function(word, embedding_matrix, n = 5) {
+  similarities <- embedding_matrix[word, , drop = FALSE] %>%
+    sim2(embedding_matrix, y = ., method = "cosine")
+
+  similarities[,1] %>% sort(decreasing = TRUE) %>% head(n)
+}
+```
+
+```{r}
+word_embedding <- ap_top_terms %>%
+  unnest_tokens(word, term) %>%
+  arrange(desc(beta)) %>%
+  arrange(topic)
+
+list <- c()
+num <- c()
+for (x in 1:nrow(word_embedding)) {
+  value <- row.names(data.frame(find_similar_words(unlist(word_embedding[x,3]), embedding_matrix)[2]))
+  valuev2 <- find_similar_words(unlist(word_embedding[x,3]), embedding_matrix)[2]
+  list <- append(list, value)
+  num <- append(num, valuev2)
+}
+
+word_embedding <- word_embedding %>%
+  mutate(sim_word = list) %>%
+  mutate(sim = num)
+
+find_similar_words("story", embedding_matrix)
+```
+
+```{r}
+library(igraph)
+library(ggraph)
+library(ggplot2)
+
+graph <- word_embedding %>%
+  select(word, sim_word, sim) %>%
+  rename(from = word, to = sim_word, sig = sim)
+
+graphNetwork <- graph.data.frame(graph, directed = F)
+
+ggraph(graphNetwork, layout = "fr") +
+  geom_edge_link(aes(width = graphNetwork$sig, edge_alpha = graphNetwork$sig), show.legend = FALSE, edge_colour = "pink") +
+  geom_node_text(aes(label = V(graphNetwork)$name), col = "darkgreen", size = 4) +
+  theme_graph(base_family = "Arial Narrow") +
+  theme(legend.position = "none") +
+  labs(title = "Similaries For Topic Terms", subtitle = "")
+```
+
+
+```{r}
+#library(widyr)
+#Similaries
+#tidy_skipgrams <- tokens %>%
+#  mutate(postID = row_number()) %>%
+#  select(text, postID) %>%
+#  unnest_tokens(ngram, text, token = "ngrams", n = 8) %>%
+#  mutate(ngramID = row_number()) %>% 
+#  tidyr::unite(skipgramID, postID, ngramID) %>%
+#  unnest_tokens(word, ngram)
+
+#calculate unigram probabilities (used to normalize skipgram probabilities later)
+#unigram_probs <- tokens %>%
+#  unnest_tokens(word, text) %>%
+#  count(word, sort = TRUE) %>%
+#  mutate(p = n / sum(n)) %>%
+#  ungroup() %>%
+#  select(word, p)
+
+#calculate probabilities
+#skipgram_probs <- tidy_skipgrams %>%
+#  pairwise_count(word, skipgramID, diag = TRUE, sort = TRUE) %>%
+#  mutate(p = n / sum(n)) %>%
+#  rename(word1 = item1, word2 = item2) %>%
+#  filter(n > 1)
+
+#normalize probabilities
+#normalized_prob <- skipgram_probs %>%
+#  left_join(select(unigram_probs, word1 = word, p1 = p), by = "word1") %>%
+#  left_join(select(unigram_probs, word2 = word, p2 = p), by = "word2") %>%
+#  mutate(p_together = p / p1 / p2)
+
+#normalized_prob %>% 
+#    filter(word1 == "story") %>%
+#    arrange(-p_together)
+```
