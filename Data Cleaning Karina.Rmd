@@ -2,6 +2,8 @@
 ```{r results='hide', message=FALSE, warning=FALSE}
 library(tidyverse)
 library(tidytext)
+library(scales)
+library(textstem)
 
 #upload the data into shiny
 cirque <- read_csv("Data/Cirque_Train.csv")
@@ -116,4 +118,8 @@ tokens <- clean_model %>%
 
 tokens [is.na(tokens)] <- ""
 tokens <- unite(tokens, text,-id, -response, sep =" " )
+```
+
+```{r, warning=FALSE}
+write.csv(tokens,"Data/Tokens_Clean.csv", row.names = FALSE)
 ```
