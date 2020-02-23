@@ -1,0 +1,89 @@
+---
+title: "top10_text_ellen"
+author: "Ellen"
+date: "2/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidytext)
+library(scales)
+library(textstem)
+
+#upload the data into shiny
+cirque <- read_csv("Data/Cirque_Train.csv")
+#med <- read_csv("Ghislene/Data/drug_combine.csv")
+```
+
+Top 25 Words For the Document 
+
+```{r}
+corpus <- cirque$Text
+response <- cirque$Show
+
+n_grams = 1
+
+model <- tibble::tibble(corpus, response)
+
+clean_model <- model %>%
+  mutate(id = row_number()) %>%
+  group_by(response) %>%
+  unnest_tokens(word, corpus, token = "ngrams", n = n_grams) %>%
+  ungroup()
+
+clean_model$word <- gsub('[[:punct:]]+', 'NA', clean_model$word)
+clean_model$word <- gsub('[[:digit:]]+', 'NA', clean_model$word)
+
+clean_model <- clean_model %>%
+    mutate(word = lemmatize_words(word)) %>%
+    filter(!word %in% stop_words$word, !word %in% "NA") %>%
+    ungroup()
+
+wordCount <- clean_model %>%
+    count(word,sort = TRUE) %>%
+    slice(1:25)
+```
+
+Visualizations 
+
+```{r}
+#wordcloud
+library("wordcloud")
+set.seed(100)
+wordcloud(words = wordCount$word, freq = wordCount$n, min.freq = 3, max.words = 25, random.order=FALSE, rot.per=0.30, colors=brewer.pal(8, "Dark2"))
+
+#barchat
+wordCount %>%
+  slice(1:10) %>%
+  ggplot(aes(x = word, y = n, fill = word)) + geom_bar(stat = 'identity')  + coord_flip()
+```
+
+Top 25 TF-IDF Scores For The Document
+
+```{r}
+## TD-IDF
+cirqueTFIDF <- clean_model %>%
+  count(id, word, sort = TRUE) %>%
+  bind_tf_idf(word, id, n) %>%
+  group_by(id) %>%
+  arrange(desc(tf_idf)) %>%
+  slice(1:25)%>%
+  ungroup() %>%
+  mutate(xOrder=n():1)
+```
+
+Visualize TF-IDF
+
+```{r}
+cirqueTFIDF %>%
+  arrange(desc(tf_idf)) %>%
+  slice(1:25) %>%
+  ggplot(aes(x = word, y = tf_idf, fill = word)) + geom_bar(stat = 'identity')  + coord_flip()
+```
+
+(Process the Data)
