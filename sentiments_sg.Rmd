@@ -1,0 +1,327 @@
+---
+title: "sentiment"
+author: "Team Baby Yoda"
+date: "2/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r}
+
+# packages
+
+#install.packages("wordcloud")
+#install.packages("textdata") 
+#install.packages("syuzhet")
+#install.packages('sentimentr')
+
+library(tidyverse)
+library(tidytext)
+library(wordcloud)
+library(tm)
+library(syuzhet)
+library(textdata)
+library(sentimentr)
+
+```
+
+``` {r}
+#sentiments
+bing <- get_sentiments("bing") 
+#afinn <- get_sentiments("afinn")
+nrc <- get_sentiments("nrc")
+
+```
+
+
+``` {r}
+
+# #Already did this once, don't need to do again.
+# 
+# # read data
+# c <- read_csv("Data/Cirque_Train.csv")
+# 
+# 
+# 
+# # clean the text
+# c$Text <- gsub("&#39;", "", c$Text)
+# c$Text <- gsub("&#34;", "", c$Text)
+# c$Show <- gsub("Cirque du Soleil - ", "", c$Show)
+# 
+# 
+# # save dataset again with cleaned text
+# write_csv(c, "Data/cirque_du_soleil_clean.csv")
+
+```
+
+
+```{r}
+
+# read in cleaned set
+c <- read_csv("Data/cirque_du_soleil_clean.csv")
+tokens <- read_csv("Data/Tokens_Clean.csv")
+
+```
+
+
+# Word Cloud
+``` {r}
+
+# Word Cloud
+
+# for the original set
+# word counts
+word_counts <- c %>%
+  unnest_tokens(word, Text) %>%
+  count(word) %>%
+  anti_join(stop_words)
+
+#get top 100 words in all shows combined
+words_top100 <- word_counts %>%
+  top_n(100)
+
+#word cloud
+wordcloud(words_top100$word,
+           words_top100$n,
+           scale=c(2,0.5), 
+           colors=brewer.pal(8,"Dark2"))
+
+
+#------
+
+# for the Tokens_Clean csv
+# word counts
+word_counts_T <- tokens %>%
+  unnest_tokens(word, text) %>%
+  count(word) %>%
+  anti_join(stop_words)
+
+#get top 100 words in all shows combined
+tokens_top100 <- word_counts_T %>%
+  top_n(100)
+
+#word cloud
+wordcloud(tokens_top100$word,
+           words_top100$n,
+           scale=c(2,0.5), 
+           colors=brewer.pal(8,"Dark2"))
+
+```
+
+
+
+# Sentiment Comparison Word Cloud 
+``` {r}
+
+#sentiment comparison word cloud
+
+#done for the tokenized data
+t_t <- tokens$text
+
+s <- get_nrc_sentiment(t_t)
+sent_ <- colSums(s)
+sent_sum <- data.frame(count = sent_, sentiment = names(sent_))
+sent_sum$sentiment= factor(sent_sum$sentiment, levels = sent_sum$sentiment[order(sent_sum$count, decreasing = TRUE)])
+
+#this below didn't work. keep scrolling for a working version
+# wc_sents <- c(
+#   paste(t_t[s$anger>0], collapse = " "),
+#   paste(t_t[s$anticipation>0], collapse = " "),
+#   paste(t_t[s$disgust>0], collapse = " "),
+#   paste(t_t[s$fear>0], collapse = " "),
+#   paste(t_t[s$joy>0], collapse = " "),
+#   paste(t_t[s$sadness>0], collapse = " "),
+#   paste(t_t[s$surprise>0], collapse = " "),
+#   paste(t_t[s$trust>0], collapse = " "),
+#   #paste(t_t[s$negative>0], collapse = " "),
+#   #paste(t_t[s$positive>0], collapse = " "),
+# )
+
+ang <- paste(t_t[s$anger>0], collapse = " ")
+ant <- paste(t_t[s$anticipation>0], collapse = " ")
+disg <- paste(t_t[s$disgust>0], collapse = " ")
+fear <- paste(t_t[s$fear>0], collapse = " ")
+joy <- paste(t_t[s$joy>0], collapse = " ")
+sad <- paste(t_t[s$sadness>0], collapse = " ")
+surp <- paste(t_t[s$surprise>0], collapse = " ")
+trust <- paste(t_t[s$trust>0], collapse = " ")
+
+wc_sents <- c(ang, ant, disg, fear, joy, sad, surp, trust)
+
+wc_corpus <- Corpus(VectorSource(wc_sents))
+
+wc_tdm <- TermDocumentMatrix(wc_corpus)
+wc_tdm <- as.matrix(wc_tdm)
+
+colnames(wc_tdm) <- c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+
+comparison.cloud(wc_tdm, random.order = TRUE, 
+                 colors = brewer.pal(8,"Dark2"),
+                 title.size = 0.75, max.words = 250,
+                 scale = c(1.5, 0.4), rot.per = 0.325)
+
+```
+
+
+
+
+# Sentiments
+
+## NRC
+``` {r}
+
+# sentiment 
+
+# nrc sentiments
+
+sentiment.orientation <- data.frame(orientation = c(rep("Positive",5),rep("Negative",5)),
+                                sentiment = c("anticipation","joy","positive","trust","surprise","anger","disgust","fear","negative","sadness"))
+
+
+nrc_sent <- c %>%
+  unnest_tokens(word, Text) %>%
+  count(Show,word) %>%
+  group_by(Show) %>%
+  inner_join(nrc ,by=c("word")) %>%
+  group_by(Show,sentiment) %>%
+  summarize(total=sum(n))
+
+#graph
+nrc_sent_barg <- nrc_sent %>%
+  ggplot(aes(x=sentiment,y=total,fill=sentiment, group = Show)) + geom_bar(stat='identity',position='dodge')+ 
+  facet_wrap(~Show, scales='free') +
+  ylab('Word Count') +
+  xlab('Sentiment') +
+  labs(title='Sentiment Frequency per Show') + 
+  theme(axis.text.x  = element_text(angle=90))
+
+nrc_sent_barg
+
+```
+
+## SentimentR
+
+``` {r}
+
+#sentimentr 
+
+#gives the mean and standard deviation of sentiments by show
+
+sentr_sent <- c %>%
+  get_sentences() %>%
+  sentiment_by(by = 'Show')
+
+sentr_barg <- ggplot(sentr_sent, aes(x = reorder(Show, ave_sentiment), y = ave_sentiment, fill = Show)) + geom_bar(stat= 'identity') + labs(x = 'Show', y = 'Average Sentiment', title = "Average Sentiment per Show")
+
+sentr_barg
+
+```
+
+
+
+
+## Bing
+``` {r}
+
+#bing
+
+#positive/negative sentiment distribution per show
+netsent_posneg <- c %>%
+  select(Show, Text) %>%
+  unnest_tokens(word,Text) %>%
+  count(Show,word) %>%
+  group_by(Show) %>%
+  inner_join(bing,by=c("word")) %>%
+  group_by(Show,sentiment) %>%
+  summarize(total=sum(n)) %>%
+  spread(sentiment,total) %>%
+  rename(negative_count = negative, positive_count = positive) %>%
+  mutate(netsentiment=positive_count-negative_count, total= negative_count + positive_count, negative = negative_count/total, positive = positive_count/total)
+
+#gather columns
+netsent <- netsent_posneg %>%
+  gather(key = sentiment_type, value = percentage, c(positive,negative))
+netsent
+
+#graph
+netsent_barg <- ggplot(netsent, aes(x = Show, y = percentage, fill = sentiment_type)) + geom_bar(stat = 'identity', position = 'dodge') + labs(y = 'Sentiment Percentage', title = 'Sentiment Distribution per Show')
+
+netsent_barg
+#-------
+
+
+```
+
+
+
+
+
+# Word Counts
+``` {r}
+
+#need to remove cirque, du, soleil, las, vegas
+
+
+# simple word frequencies
+#for the original data
+
+#unigrams
+unigram_top25 <- c %>%
+  unnest_tokens(word,Text) %>%
+  count(Show,word) %>%
+  anti_join(stop_words) %>%
+  group_by(Show) %>%
+  top_n(25) %>%
+  ggplot(aes(x=reorder_within(word,n,Show),
+             y=n,
+             fill=Show)) + 
+  geom_bar(stat='identity') + 
+  coord_flip() +
+  scale_x_reordered() +
+  facet_wrap(~Show, scales = 'free',nrow=1) + 
+  theme_bw() + 
+  theme(legend.position = "none")+
+  labs(title = 'Top Words by Show',
+       subtitle = 'Stop words removed',
+       x = 'Word',
+       y = 'Count')
+
+unigram_top25
+
+# ---
+
+#bigrams
+
+#need to remove stop words from bigrams
+bigram_top25 <- c %>%
+  select(Show, Text) %>%
+  unnest_tokens(word, Text, token = "ngrams", n = 2) %>%
+  count(Show,word) %>%
+#  anti_join(stop_words) %>%
+  group_by(Show) %>%
+  top_n(25) %>%
+  ggplot(aes(x=reorder_within(word,n,Show),
+             y=n,
+             fill=Show)) + 
+  geom_bar(stat='identity') + 
+  coord_flip() +
+  scale_x_reordered() +
+  facet_wrap(~Show, scales = 'free',nrow=1) + 
+  theme_bw() + 
+  theme(legend.position = "none")+
+  labs(title = 'Top Bigrams by Show',
+       subtitle = 'Stop words removed',
+       x = 'Bigram',
+       y = 'Count')
+
+bigram_top25
+
+
+```
+
+
+
+
