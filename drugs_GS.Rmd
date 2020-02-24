@@ -1,0 +1,217 @@
+---
+title: "Drugs"
+author: "Gino Slanzi"
+date: "2/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE}
+#imnport libraries:
+
+library(tidyverse)
+library(tidytext)
+library(readr)
+library(topicmodels)
+library(ggplot2)
+
+```
+
+
+This basic analysis is a reproduction of the one performed [here](https://towardsdatascience.com/beginners-guide-to-lda-topic-modelling-with-r-e57a5a8e7a25) but using our drugs data.
+
+#### Load the data:
+
+```{r}
+Celexa <- readRDS("Ghislene/data/Celexa.rds")
+Lexapro <- readRDS("Ghislene/data/Lexapro.rds")
+Luvox <- readRDS("Ghislene/data/Luvox.rds")
+Paxil <- readRDS("Ghislene/data/Paxil.rds")
+Prozac <- readRDS("Ghislene/data/Prozac.rds")
+Zoloft <- readRDS("Ghislene/data/Zoloft.rds")
+```
+
+
+#### Pre-processing:
+
+```{r}
+## put al the data together
+all_drugs <- rbind(Celexa,Lexapro,Luvox,Paxil,Prozac,Zoloft)
+
+
+
+```
+
+
+```{r}
+#See what shows are in the data
+#table(Cirque_Train$Show)
+```
+
+```{r, message = FALSE}
+#Lets see how does the data look:
+
+#head(Cirque_Train$Text, 5)
+
+#Add id column
+all_drugs <- all_drugs %>% mutate(id = row_number())
+
+sub_all_drugs <- all_drugs %>%
+  select(id,comment)
+
+```
+
+```{r, message = FALSE}
+#un nest tokens (tokens = 1 word)
+text_cleaning_tokens <- sub_all_drugs %>% 
+  unnest_tokens(word, comment)
+
+# remove numbers and signs
+text_cleaning_tokens$word <- gsub('[[:digit:]]+', '', text_cleaning_tokens$word)
+text_cleaning_tokens$word <- gsub('[[:punct:]]+', '', text_cleaning_tokens$word)
+
+# Remove stoptwords
+text_cleaning_tokens <- text_cleaning_tokens %>% 
+  filter(!(nchar(word) == 1)) %>% 
+  anti_join(stop_words)
+
+# Remove empty rows (from the previuos cleaning process)
+tokens <- text_cleaning_tokens %>% filter(!(word==""))
+
+# Add index number to each row
+tokens <- tokens %>% mutate(ind = row_number())
+
+
+tokens <- tokens %>% 
+  select(id,word,id) %>%
+  group_by(id) %>% 
+  mutate(ind = row_number()) %>%
+  spread(key = ind, value = word)
+
+
+#Remove NAs
+tokens [is.na(tokens)] <- ""
+
+#Join texts again
+tokens <- unite(tokens, text,-id,sep =" " )
+
+# Leave only the clean text and id.
+tokens$text <- trimws(tokens$text)
+```
+
+#### Model
+
+Start by creating a DTM(document term matrix), which is a sparse matrix containing your terms and documents as dimensions. When building the DTM, you can select how you want to tokenise(break up a sentence into 1 word or 2 words) your text. This will depend on how you want the LDA to read your words. You will need to ask yourself if singular words or bigram(phrases) makes sense in your context. For instance if your texts contain many words such as “failed executing” or “not appreciating”, then you will have to let the algorithm choose a window of maximum 2 words. Otherwise using a unigram will work just as fine. In our case, because it’s Twitter sentiment, we will go with a window size of 1–2 words, and let the algorithm decide for us, which are the more important phrases to concatenate together. We will also explore the term frequency matrix, which shows the number of times the word/phrase is occurring in the entire corpus of text. If the term is < 2 times, we discard them, as it does not add any value to the algorithm, and it will help to reduce computation time as well.
+
+
+**Other suggestions**
+Start by doing a word frequency count:
+
+* Are there common words that occur in most documents? Throw them out!
+Stop words
+
+  * Words related to the overall context of the documents (things like brand or product names, place names etc. )
+  
+  * In general, punctuation doesn't add value to this modeling. Using unnest_tokens gets rid of it.
+  
+  * Throw out rare words (they can’t tell anything interesting about topics anyway). This will also eliminate typos.
+  
+  * It is usually recommended to also stem or lemmatize your documents
+
+  * Throw out documents with low word count (they are hard to classify)
+
+Finally, reshape your documents into the form of a document-term matrix. This will be the input into the LDA. All of these steps can be one using the tidytext package.
+
+```{r, message=FALSE}
+#create DTM
+#we can do this using Tidytext and Tm
+
+prueba <- tokens %>%
+  unnest_tokens(word,text) %>%
+  count(id,word)
+
+tokens %>%
+  select(text) %>%
+  unnest_tokens(word,text) %>%
+  count(word,sort = TRUE)
+
+dtm_prueba <- prueba %>%
+  cast_dtm(id, word, n)
+
+
+tokens %>%
+  ungroup() %>%
+    select(text) %>%
+  unnest_tokens(word,text) %>%
+  count(word,sort = TRUE) %>%
+  top_n(100)
+  
+
+#prueba %>%
+#  cast_dfm(id, word, n)
+
+
+##explore the basic frequency
+#tf <- TermDocFreq(dtm = dtm)
+#original_tf <- tf %>% select(term, term_freq,doc_freq)
+#rownames(original_tf) <- 1:nrow(original_tf)
+## Eliminate words appearing less than 2 times or in more than half of the
+## documents
+#vocabulary <- tf$term[ tf$term_freq > 1 & tf$doc_freq < nrow(dtm) / 2 ]
+#dtm = dtm
+#
+
+
+
+ap_lda <- LDA(dtm_prueba, k = 8, control = list(seed = 1234))
+ap_lda
+
+
+
+ap_topics <- tidy(ap_lda, matrix = "beta")
+ap_topics
+
+
+
+ap_top_terms <- ap_topics %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+ap_top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+
+
+beta_spread <- ap_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  spread(topic, beta) %>%
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_spread
+
+
+beta_spread %>%
+  top_n(25) %>%
+  ggplot(aes(term, log_ratio)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_x_reordered()
+
+```
+
+Explore ways to automatize the labeling of topics.
+
+* try this: https://towardsdatascience.com/evaluate-topic-model-in-python-latent-dirichlet-allocation-lda-7d57484bb5d0
+
