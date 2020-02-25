@@ -17,7 +17,7 @@ NYTIMES_KEY="bivqAnNUnxs6CmliCOFeAbuMBIYVPHdn"
 
 
 # Let's set some parameters
-term <- "central+park+jogger" # Need to use + to string together separate words
+term <- "usa" # Need to use + to string together separate words
 
 baseurl <- paste0("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=",term,
                   "&facet_filter=true&api-key=",NYTIMES_KEY, sep="")
