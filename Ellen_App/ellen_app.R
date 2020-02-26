@@ -58,8 +58,13 @@ sidebar <- dashboardSidebar(sidebarMenuOutput('menu'), width = 160)
 # BODY
 body <- dashboardBody(
     tags$style(HTML(
-      type = 'text/css', 
-                      '.navbar { background-color: white;}'
+      '
+      .main-header .logo {
+        font-family: "Georgia", Times, "Times New Roman", serif;
+        font-weight: bold;
+        font-size: 24px;
+      }
+    '
     ),make_css(list('.box',c('font-size'),c('13px')))),
     #shinyDashboardThemes(theme = "grey_dark"),
     tabItems(
