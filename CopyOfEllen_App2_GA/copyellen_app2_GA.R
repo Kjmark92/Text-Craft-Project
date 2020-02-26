@@ -197,10 +197,10 @@ ui <- dashboardPage(skin="black",header,sidebar,body,title = "URAT")
 
 server <- function(input, output){
     
-    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 't1'),
+    output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 't1', icon= icon("trophy")),
                                          menuItem(text= span('Load Data',style="font-size:18px"),tabName = "t2"),
-                                         menuItem(text= span('Process Data',style="font-size:18px"),tabName = "t3"),
-                                         menuItem(text= span('Get Insights',style="font-size:18px"),tabName = "t4"),
+                                         menuItem(text= span('Process Data',style="font-size:18px"),tabName = "t3",icon=icon("address-book")),
+                                         menuItem(text= span('Get Insights',style="font-size:18px"),tabName = "t4", icon("info")),
                                          menuItem(text= span('Contact Info',style="font-size:18px"),tabName = "t5") ) })  
     
     output$moreinfo1 <- renderUI({
