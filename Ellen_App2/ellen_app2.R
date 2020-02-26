@@ -60,14 +60,14 @@ sidebar <- dashboardSidebar(sidebarMenuOutput('menu'), width = 160)
 
 # BODY
 body <- dashboardBody(
-    tags$style(HTML(
-        '
-      .main-header .logo {
-        font-family: "Georgia", Times, "Times New Roman", serif;
-        font-weight: bold;
-        font-size: 24px;
-      }
-    '
+    tags$style(HTML("
+          .content-wrapper {
+            background-color: white !important;
+          }
+          .main-sidebar {
+            background-color: white !important;
+          }
+        "
     )
         , make_css(list('.box',c('font-size'),c('13px')))),
     #shinyDashboardThemes(theme = "grey_dark"),
