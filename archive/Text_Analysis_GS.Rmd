@@ -68,7 +68,6 @@ tokens <- text_cleaning_tokens %>% filter(!(word==""))
 # Add index number to each row
 tokens <- tokens %>% mutate(ind = row_number())
 
-
 tokens <- clean_model %>% 
   select(id, word, response) %>%
   group_by(id) %>%

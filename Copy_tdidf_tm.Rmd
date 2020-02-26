@@ -1,0 +1,371 @@
+---
+title: ''
+author: "Ghislene Adjaoute"
+date: "3/1/2020"
+output: html_document
+---
+
+General Methodology:
+Start by doing a word frequency count:
+
+* Are there common words that occur in most documents? Throw them out!
+Stop words
+
+  * Words related to the overall context of the documents (things like brand or product names, place names etc. )
+  
+  * In general, punctuation doesn't add value to this modeling. Using unnest_tokens gets rid of it.
+  
+  * Throw out rare words (they can’t tell anything interesting about topics anyway). This will also eliminate typos.
+  
+  * It is usually recommended to also stem or lemmatize your documents
+
+  * Throw out documents with low word count (they are hard to classify)
+
+Finally, reshape your documents into the form of a document-term matrix. This will be the input into the LDA. All of these steps can be one using the tidytext package.
+
+
+```{r results='hide', message=FALSE, warning=FALSE}
+#Libraries
+library(tidyverse)
+library(tidytext)
+library(readr)
+library(textstem)
+library(topicmodels)
+```
+
+##### Load the data
+```{r}
+
+#upload the data into shiny
+cirque <- read_csv("Data/Cirque_Train.csv")
+med <- read_csv("Ghislene/data/drug_combine.csv")
+```
+
+```{r}
+#Add id of each review:
+#med <- med %>% mutate(id = row_number()) %>%
+#  select(id,drug_name,comment)
+
+#un nest tokens (tokens = 1 word)
+med_text_cleaning_tokens <- med %>% 
+  unnest_tokens(word, comment)
+
+# remove numbers and signs
+med_text_cleaning_tokens$word <- gsub('[[:digit:]]+', '', med_text_cleaning_tokens$word)
+med_text_cleaning_tokens$word <- gsub('[[:punct:]]+', '', med_text_cleaning_tokens$word)
+
+# Remove stoptwords
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>% 
+  filter(!(nchar(word) == 1)) %>% 
+  anti_join(stop_words)
+
+# Remove empty rows (from the previuos cleaning process)
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>% filter(!(word==""))
+
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>%
+  mutate(word = lemmatize_words(word))
+
+
+med_tokens <- med_text_cleaning_tokens %>% 
+  group_by(id) %>%
+  mutate(ind = row_number()) %>%
+  spread(key = ind, value = word)
+
+med_tokens[is.na(med_tokens)] <- ""
+med_tokens <- unite(med_tokens, text,-id, -drug_name, sep =" " )
+
+#Create Bi-grams:
+
+med_bigrams <- med_tokens %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+#Remove low TF-IDf
+#TF-IDF:
+med_bigrams2<- med_bigrams %>%
+  ungroup() %>%
+  count(drug_name,bigram,sort=TRUE) %>%
+  bind_tf_idf(bigram, drug_name, n) 
+
+med_bigrams_tf_idf0 <- med_bigrams2 %>%
+  filter(tf_idf == 0)
+
+length(unique(med_bigrams_tf_idf0$bigram))
+
+# Remove tfifd0
+prueba_med_bigram <- med_tokens %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  anti_join(med_bigrams_tf_idf0, by="bigram") %>%
+  count(id,bigram)
+
+
+dtm_prueba_med_bigram <- prueba_med_bigram %>%
+  cast_dtm(id, bigram, n)
+
+{r}
+#Topic model
+ap_lda_med_bigram <- LDA(dtm_prueba_med_bigram, k = 5, control = list(seed = 1234))
+ap_lda_med_bigram
+
+
+
+ap_topics_med_bigram <- tidy(ap_lda_med_bigram, matrix = "beta")
+ap_topics_med_bigram
+
+
+ap_top_terms_med_bigram <- ap_topics_med_bigram %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+ap_top_terms_med_bigram %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+#beta_spread_med_bigram <- ap_topics_med_bigram %>%
+#  mutate(topic = paste0("topic", topic)) %>%
+#  spread(topic, beta) %>%
+#  filter(topic1 > .001 | topic2 > .001) %>%
+#  mutate(log_ratio = log2(topic2 / topic1))
+#
+#beta_spread_med_bigram
+#
+#
+#beta_spread_med_bigram %>%
+#  top_n(25) %>%
+#  ggplot(aes(term, log_ratio)) +
+#  geom_col(show.legend = FALSE) +
+#  coord_flip() +
+#  scale_x_reordered()
+##### Preprocess
+```
+
+```{r}
+#Add id of each review:
+cirque <- cirque %>% mutate(id = row_number())
+
+#un nest tokens (tokens = 1 word)
+text_cleaning_tokens <- cirque %>% 
+  unnest_tokens(word, Text)
+
+# remove numbers and signs
+text_cleaning_tokens$word <- gsub('[[:digit:]]+', '', text_cleaning_tokens$word)
+text_cleaning_tokens$word <- gsub('[[:punct:]]+', '', text_cleaning_tokens$word)
+
+# Remove stoptwords
+text_cleaning_tokens <- text_cleaning_tokens %>% 
+  filter(!(nchar(word) == 1)) %>% 
+  anti_join(stop_words)
+
+# Remove empty rows (from the previuos cleaning process)
+text_cleaning_tokens <- text_cleaning_tokens %>% filter(!(word==""))
+
+
+text_cleaning_tokens <- text_cleaning_tokens %>%
+  mutate(word = lemmatize_words(word))
+
+tokens <- text_cleaning_tokens %>% 
+  group_by(id) %>%
+  mutate(ind = row_number()) %>%
+  spread(key = ind, value = word)
+
+tokens[is.na(tokens)] <- ""
+tokens <- unite(tokens, text,-id, -Show, sep =" " )
+
+#Remove low TF-IDf
+#TF-IDF:
+tokens2 <- tokens %>%
+  ungroup() %>%
+  unnest_tokens(word,text) %>%
+  count(Show,word,sort=TRUE) %>%
+  bind_tf_idf(word, Show, n) 
+
+tf_idf0 <- tokens2 %>%
+  filter(tf_idf == 0)
+
+
+# Remove tfifd0
+prueba <- tokens %>%
+  unnest_tokens(word,text) %>%
+  anti_join(tf_idf0, by="word") %>%
+  count(id,word)
+
+#prueba <- tokens %>%
+#  unnest_tokens(word,text) %>%
+#  count(id,word)
+
+dtm_prueba <- prueba %>%
+  cast_dtm(id, word, n)
+
+```
+
+```{r}
+#Topic model
+ap_lda <- LDA(dtm_prueba, k = 5, control = list(seed = 1234))
+ap_lda
+
+
+
+ap_topics <- tidy(ap_lda, matrix = "beta")
+ap_topics
+
+
+ap_top_terms <- ap_topics %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+ap_top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+
+
+beta_spread <- ap_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  spread(topic, beta) %>%
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_spread
+
+
+beta_spread %>%
+  top_n(25) %>%
+  ggplot(aes(term, log_ratio)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_x_reordered()
+```
+
+
+Let's see how this goes for Drugs:
+
+##### Load the data
+```{r}
+
+#upload the data into shiny
+#cirque <- read_csv("Data/Cirque_Train.csv")
+med <- read_csv("Ghislene/Data/drug_combine.csv")
+```
+
+##### Preprocess
+
+```{r}
+#Add id of each review:
+med <- med %>% mutate(id = row_number()) %>%
+  select(id,drug_name,comment)
+
+#un nest tokens (tokens = 1 word)
+med_text_cleaning_tokens <- med %>% 
+  unnest_tokens(word, comment)
+
+# remove numbers and signs
+med_text_cleaning_tokens$word <- gsub('[[:digit:]]+', '', med_text_cleaning_tokens$word)
+med_text_cleaning_tokens$word <- gsub('[[:punct:]]+', '', med_text_cleaning_tokens$word)
+
+# Remove stoptwords
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>% 
+  filter(!(nchar(word) == 1)) %>% 
+  anti_join(stop_words)
+
+# Remove empty rows (from the previuos cleaning process)
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>% filter(!(word==""))
+
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>%
+  mutate(word = lemmatize_words(word))
+
+
+med_tokens <- med_text_cleaning_tokens %>% 
+  group_by(id) %>%
+  mutate(ind = row_number()) %>%
+  spread(key = ind, value = word)
+
+med_tokens[is.na(med_tokens)] <- ""
+med_tokens <- unite(med_tokens, text,-id, -drug_name, sep =" " )
+
+#Remove low TF-IDf
+#TF-IDF:
+med_tokens2 <- med_tokens %>%
+  ungroup() %>%
+  unnest_tokens(word,text) %>%
+  count(drug_name,word,sort=TRUE) %>%
+  bind_tf_idf(word, drug_name, n) 
+
+med_tf_idf0 <- med_tokens2 %>%
+  filter(tf_idf == 0)
+
+length(unique(med_tf_idf0$word))
+
+# Remove tfifd0
+prueba_med <- med_tokens %>%
+  unnest_tokens(word,text) %>%
+  anti_join(med_tf_idf0, by="word") %>%
+  count(id,word)
+
+prueba <- tokens %>%
+  unnest_tokens(word,text) %>%
+  count(id,word)
+
+dtm_prueba_med <- prueba_med %>%
+  cast_dtm(id, word, n)
+
+
+```
+
+```{r}
+
+
+ap_lda_med <- LDA(dtm_prueba_med, k = 10, control = list(seed = 1234))
+ap_lda_med
+
+
+
+ap_topics_med <- tidy(ap_lda_med, matrix = "beta")
+ap_topics_med
+
+
+ap_top_terms_med <- ap_topics_med %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+ap_top_terms_med %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+
+
+beta_spread <- ap_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  spread(topic, beta) %>%
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_spread
+
+
+beta_spread %>%
+  top_n(25) %>%
+  ggplot(aes(term, log_ratio)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_x_reordered()
+```
+
+
+
