@@ -60,6 +60,7 @@ body <- dashboardBody(tags$head(tags$style(HTML("
             background-color: Linen !important;
           }
         "))),
+                      
     #tags$style(make_css(list('.box',c('font-size'),c('13px')))),
     #shinyDashboardThemes(theme = "grey_dark"),
     tabItems(
@@ -200,7 +201,7 @@ server <- function(input, output){
     output$menu<-renderMenu({sidebarMenu(menuItem(text=span('Home',style="font-size:18px"),tabName = 't1', icon= icon("trophy")),
                                          menuItem(text= span('Load Data',style="font-size:18px"),tabName = "t2"),
                                          menuItem(text= span('Process Data',style="font-size:18px"),tabName = "t3",icon=icon("address-book")),
-                                         menuItem(text= span('Get Insights',style="font-size:18px"),tabName = "t4", icon("info")),
+                                         menuItem(text= span('Get Insights',style="font-size:18px"),tabName = "t4", icon=icon("info")),
                                          menuItem(text= span('Contact Info',style="font-size:18px"),tabName = "t5") ) })  
     
     output$moreinfo1 <- renderUI({
