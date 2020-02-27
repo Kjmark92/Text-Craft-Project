@@ -57,7 +57,7 @@ body <- dashboardBody(tags$head(tags$style(HTML("
             background-color: white !important;
           }
           .main-sidebar {
-            background-color: Linen !important;
+            background-color: white !important;
           }
         "))),
                       
@@ -67,24 +67,24 @@ body <- dashboardBody(tags$head(tags$style(HTML("
         # homepage tab content
         tabItem(tabName="t1",
                 fluidRow(
-                    box(title= span('Project Introduction',style="font-size:20px"),textOutput("projinfo"),height = 150,width = 12,solidHeader = TRUE,status="primary"))),
+                    box(title= span('Project Introduction',style="font-size:20px"),textOutput("projinfo"),height = 150,width = 12,solidHeader = TRUE))),
         
         ## second tab content
         tabItem(tabName="t2",
                 fluidRow(
-                    box(title = span('Enter API Link',style="font-size:20px") , textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), height = 150,solidHeader = TRUE,width = 4,background = "black" ),
+                    box(title = span('Enter API Link',style="font-size:20px") , textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), height = 150,solidHeader = TRUE,width = 4),
                     #box(title = span('Query',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
-                    box(title = span('Upload File',style= "font-size:20px"),fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),height = 150,solidHeader = TRUE,width = 4,background = "black" ),
+                    box(title = span('Upload File',style= "font-size:20px"),fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),height = 150,solidHeader = TRUE,width = 4 ),
                     box( actionButton("runif", "Load",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
                          padding:30px; font-size:170%;margin-left: 40px; margin-top: 20px"),
                          actionButton("reset", "Clear",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
                          padding:30px; font-size:170%;margin-left: 40px; margin-top: 20px;"),
-                         height = 150,solidHeader = TRUE,width = 3,background = "black" )), 
+                         height = 150,solidHeader = TRUE,width = 3 )), 
                     
                 
                 fluidRow(
-                    box(title = span('Contents',style = "font-size:20px"),column(width = 12,withSpinner(DT::dataTableOutput("contents")),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8,status = "primary"),
-                    box(title = span('Select Required Features',style="font-size:20px") , uiOutput("select_corpus"),uiOutput("select_response"), height = 200,solidHeader = TRUE,width = 3,background = "black" ))
+                    box(title = span('Contents',style = "font-size:20px"),column(width = 12,withSpinner(DT::dataTableOutput("contents")),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8),
+                    box(title = span('Select Required Features',style="font-size:20px") , uiOutput("select_corpus"),uiOutput("select_response"), height = 200,solidHeader = TRUE,width = 3))
                     #box(title = span('Select Response',style="font-size:20px") , uiOutput("select_response"), height = 150,solidHeader = TRUE,width = 2,background = "black" ))
                 ),
         
@@ -135,7 +135,7 @@ body <- dashboardBody(tags$head(tags$style(HTML("
                                        uiOutput("select_seed",style = "width: 50%;margin-left: 40px;")),
                             div(style = 'max-width:90%;max-height:225px',verticalLayout(uiOutput("select_number_words",style = "width: 50%;margin-left: 35px;"),
                                            uiOutput("select_number_topics",style = "margin-top:25px;height:160px;width: 50%;margin-left: 35px;")))),
-                        height = 350,solidHeader = TRUE,width = 6,status = "primary"),
+                        height = 350,solidHeader = TRUE,width = 6),
                     
                     actionButton("analyze", "Analyze Document Corpus",style="color: #fff; background-color: #7790BF; border-color: #2e6da4;
                                                  padding:30px; font-size:200%;margin-left: 200px; margin-top: 90px")
@@ -184,7 +184,7 @@ body <- dashboardBody(tags$head(tags$style(HTML("
         #fifth tab
         tabItem(tabName="t5",
                 fluidRow(
-                    box(title= span('Contact Info',style="font-size:20px"),uiOutput("moreinfo1"),height = 150,width = 12,solidHeader = TRUE,status="primary")))
+                    box(title= span('Contact Info',style="font-size:20px"),uiOutput("moreinfo1"),height = 150,width = 12,solidHeader = TRUE)))
     ))
 
 
