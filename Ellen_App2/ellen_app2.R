@@ -41,7 +41,7 @@ options(spinner.color="#add8e6", spinner.color.background="#ffffff", spinner.siz
 
 # HEADER
 header <- dashboardHeader(
-  title = span("TextCraft",style = "font-size:25px; font-family: serif;color:#191970 "),
+  title = span("TextCraft",style = "font-size:25px; font-family: serif;color:#191970; font-weight: bold"),
   titleWidth = 300
 )
 
@@ -49,6 +49,9 @@ header <- dashboardHeader(
 
 #SIDEBAR
 sidebar <- dashboardSidebar(
+  
+  br(),
+
   tags$style(HTML('
                   .main-sidebar{
                   font-family: "serif";
@@ -65,14 +68,18 @@ sidebar <- dashboardSidebar(
                   .skin-black .main-sidebar .sidebar .sidebar-menu a{
                           color: #191970;
                           font-weight: bold;
+                  }
+                  .h5 {
+                          color: #191970
                           }
                   '
     
   )),
-   # ".sidebar-toggle:hover{
-   #                             background-color: #48D1CC;"
- # )),
-    sidebarMenuOutput('menu'), width = 160)
+  
+  
+  
+    sidebarMenuOutput('menu'),
+  width = 160)
 
 
 # BODY
@@ -156,7 +163,7 @@ body <- dashboardBody(
                       splitLayout(cellWidths = c("25%","30%", "25%","10%","10%"),
                                   uiOutput("select_custom_words",style = "height:225px"),
                                   uiOutput("enter_custom_words",style = "height:225px"),
-                                  div(style = 'overflow-y: scroll;overflow-x: hidden ;max-height:225px;margin-left :10px',tableOutput("show_custom_words")),
+                                  div(style = 'overflow-y: scroll;overflow-x: hidden ;max-height:225px;margin-left :40px',tableOutput("show_custom_words")),
                                   actionButton("annotate", "Annotate",style="color: #fff; background-color: #191970; border-color: #708090;
                                                  padding:10px; font-size:120%;margin-left: 30px; margin-top: 70px"),
                                   actionButton("reset_annotate", "Reset",style="color: #fff; background-color: #191970; border-color: #708090;
