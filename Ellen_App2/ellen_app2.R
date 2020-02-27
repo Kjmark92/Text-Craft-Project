@@ -66,7 +66,11 @@ body <- dashboardBody(
           }
           .main-sidebar {
             background-color: white !important;
+           
           }
+          .handsontable {
+        overflow: visible;
+      }
         "
     )
         , make_css(list('.box',c('font-size'),c('13px')))),
@@ -75,7 +79,7 @@ body <- dashboardBody(
         # homepage tab content
         tabItem(tabName="t1",
                 fluidRow(
-                    box(title= span('Project Introduction',style="font-size:20px"),textOutput("projinfo"),height = 150,width = 12,solidHeader = TRUE,color="black"))),
+                    box(title= span('Project Introduction',style="font-size:20px"),textOutput("projinfo"),height = 150,width = 12,solidHeader = TRUE))),
         
         ## second tab content
         tabItem(tabName="t2",
@@ -124,14 +128,14 @@ body <- dashboardBody(
                     
                 fluidRow(
                   box(title = span('Annotation',style="font-size:20px"),
-                      splitLayout(cellWidths = c("23%","23%", "29%","25%"),
+                      splitLayout(cellWidths = c("25%","25%", "25%","25%"),
                                   uiOutput("select_custom_words",style = "height:225px"),
                                   div(style = 'overflow-y: scroll;max-height:225px;margin-left: 60px;',tableOutput("show_custom_words")),
                                   actionButton("annotate", "Annotate",style="color: #fff; background-color: #708090; border-color: #708090;
                                                  padding:8px; font-size:120%;margin-left: 20px; margin-top: 70px"),
                                   actionButton("reset_annotate", "Reset",style="color: #fff; background-color: #708090; border-color: #708090;
                                                  padding:8px; font-size:120%;margin-left: 20px; margin-top: 70px")),
-                      height = 300,solidHeader = TRUE,width = 6,)),
+                      height = 300,solidHeader = TRUE,width = 12,)),
                 
                 #fluidRow(
                 #    tableOutput("test")
@@ -144,9 +148,9 @@ body <- dashboardBody(
                                        uiOutput("select_seed",style = "width: 50%;margin-left: 40px;")),
                             div(style = 'max-width:90%;max-height:225px',verticalLayout(uiOutput("select_number_words",style = "width: 50%;margin-left: 35px;"),
                                            uiOutput("select_number_topics",style = "margin-top:25px;height:160px;width: 50%;margin-left: 35px;")))),
-                        height = 350,solidHeader = TRUE,width = 6),
+                        height = 350,solidHeader = TRUE,width = 8),
                     
-                    actionButton("analyze", "Analyze Document Corpus",style="color: #fff; background-color: #7790BF; border-color: #2e6da4;
+                    actionButton("analyze", "Analyze Document Corpus",style="color: #fff; background-color: #708090; border-color: #708090;
                                                  padding:30px; font-size:200%;margin-left: 200px; margin-top: 90px")
                     )
    
