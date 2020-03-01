@@ -72,7 +72,7 @@ tokens <- read_csv("Data/Tokens_Clean.csv")
 
 # Word Cloud
 
-# for the original set
+# for the original dataset - original reviews as they are
 # word counts
 word_counts <- c %>%
   unnest_tokens(word, Text) %>%
@@ -113,7 +113,55 @@ wordcloud(tokens_top100$word,
 
 
 
-# Sentiment Comparison Word Cloud 
+# Sentiment comparison word cloud for the original dataset- original reviews as they are
+``` {r}
+c_t <- c$Text
+
+s_c <- get_nrc_sentiment(c_t)
+sent_c <- colSums(s_c)
+sent_sum_c <- data.frame(count = sent_c, sentiment = names(sent_c))
+sent_sum_c$sentiment= factor(sent_sum_c$sentiment, levels = sent_sum_c$sentiment[order(sent_sum_c$count, decreasing = TRUE)])
+
+#this below didn't work. keep scrolling for a working version
+# wc_sents <- c(
+#   paste(c_t[s_c$anger>0], collapse = " "),
+#   paste(c_t[s_c$anticipation>0], collapse = " "),
+#   paste(c_t[s_c$disgust>0], collapse = " "),
+#   paste(c_t[s_c$fear>0], collapse = " "),
+#   paste(c_t[s_c$joy>0], collapse = " "),
+#   paste(c_t[s_c$sadness>0], collapse = " "),
+#   paste(c_t[s_c$surprise>0], collapse = " "),
+#   paste(c_t[s_c$trust>0], collapse = " "),
+#   #paste(c_t[s_c$negative>0], collapse = " "),
+#   #paste(c_t[s_c$positive>0], collapse = " "),
+# )
+
+ang_c <- paste(c_t[s_c$anger>0], collapse = " ")
+ant_c <- paste(c_t[s_c$anticipation>0], collapse = " ")
+disg_c <- paste(c_t[s_c$disgust>0], collapse = " ")
+fear_c <- paste(c_t[s_c$fear>0], collapse = " ")
+joy_c <- paste(c_t[s_c$joy>0], collapse = " ")
+sad_c <- paste(c_t[s_c$sadness>0], collapse = " ")
+surp_c <- paste(c_t[s_c$surprise>0], collapse = " ")
+trust_c <- paste(c_t[s_c$trust>0], collapse = " ")
+
+wc_sents_c <- c(ang_c, ant_c, disg_c, fear_c, joy_c, sad_c, surp_c, trust_c)
+
+wc_corpus_c <- Corpus(VectorSource(wc_sents_c))
+
+wc_tdm_c <- TermDocumentMatrix(wc_corpus_c)
+wc_tdm_c <- as.matrix(wc_tdm_c)
+
+colnames(wc_tdm_c) <- c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+
+comparison.cloud(wc_tdm_c, random.order = TRUE, 
+                 colors = brewer.pal(8,"Dark2"),
+                 title.size = 0.75, max.words = 250,
+                 scale = c(1.5, 0.4), rot.per = 0.325)
+```
+
+
+# Sentiment Comparison Word Cloud - for the tokenized dataset
 ``` {r}
 
 #sentiment comparison word cloud
@@ -181,6 +229,8 @@ sentiment.orientation <- data.frame(orientation = c(rep("Positive",5),rep("Negat
                                 sentiment = c("anticipation","joy","positive","trust","surprise","anger","disgust","fear","negative","sadness"))
 
 
+# nrc sentiment grouped by show/response ---
+
 nrc_sent <- c %>%
   unnest_tokens(word, Text) %>%
   count(Show,word) %>%
@@ -189,7 +239,7 @@ nrc_sent <- c %>%
   group_by(Show,sentiment) %>%
   summarize(total=sum(n))
 
-#graph
+#graph - with facetwrap
 nrc_sent_barg <- nrc_sent %>%
   ggplot(aes(x=sentiment,y=total,fill=sentiment, group = Show)) + geom_bar(stat='identity',position='dodge')+ 
   facet_wrap(~Show, scales='free') +
@@ -200,6 +250,46 @@ nrc_sent_barg <- nrc_sent %>%
 
 nrc_sent_barg
 
+
+#graph - without facetwrap
+
+response_groups <- levels(factor(c$Show))
+
+for (r in response_groups){
+  print(nrc_sent %>%
+  filter(Show == r) %>%
+  ggplot(aes(x=reorder(sentiment,total),y=total,fill=sentiment)) + geom_bar(stat='identity',position='dodge')+ 
+  ylab('Word Count') +
+  xlab('Sentiment') +
+  labs(title=paste('Sentiment Frequency for', r)) + 
+  theme(axis.text.x  = element_text(angle=90)))
+}
+
+
+
+#-------
+
+# not grouped - for the whole dataset
+nrc_sent_all <- c %>%
+  unnest_tokens(word, Text) %>%
+  count(word) %>%
+  inner_join(nrc ,by=c("word")) %>%
+  group_by(sentiment) %>%
+  summarize(total=sum(n))
+
+#graph
+nrc_sent_barg_all <- nrc_sent_all %>%
+  ggplot(aes(x=reorder(sentiment,total),y=total,fill=sentiment)) + geom_bar(stat='identity',position='dodge')+ 
+  ylab('Word Count') +
+  xlab('Sentiment') +
+  labs(title='Sentiment Frequency') + 
+  theme(axis.text.x  = element_text(angle=90))
+
+nrc_sent_barg_all
+
+
+
+
 ```
 
 ## SentimentR
@@ -208,7 +298,7 @@ nrc_sent_barg
 
 #sentimentr 
 
-#gives the mean and standard deviation of sentiments by show
+#gives the mean and standard deviation of sentiments by show/response
 
 sentr_sent <- c %>%
   get_sentences() %>%
@@ -223,12 +313,12 @@ sentr_barg
 
 
 
-## Bing
+## Bing Positive/Negative Sentiment Distribution
 ``` {r}
 
 #bing
 
-#positive/negative sentiment distribution per show
+#positive/negative sentiment distribution - grouped by show/response
 netsent_posneg <- c %>%
   select(Show, Text) %>%
   unnest_tokens(word,Text) %>%
@@ -250,6 +340,30 @@ netsent
 netsent_barg <- ggplot(netsent, aes(x = Show, y = percentage, fill = sentiment_type)) + geom_bar(stat = 'identity', position = 'dodge') + labs(y = 'Sentiment Percentage', title = 'Sentiment Distribution per Show')
 
 netsent_barg
+#-------
+
+
+#positive/negative sentiment distribution - not grouped/for the whole dataset
+netsent_posneg_all <- c %>%
+  select(Text) %>%
+  unnest_tokens(word,Text) %>%
+  count(word) %>%
+  inner_join(bing,by=c("word")) %>%
+  group_by(sentiment) %>%
+  summarize(total=sum(n)) %>%
+  spread(sentiment,total) %>%
+  rename(negative_count = negative, positive_count = positive) %>%
+  mutate(netsentiment=positive_count-negative_count, total= negative_count + positive_count, negative = negative_count/total, positive = positive_count/total)
+
+#gather columns
+netsent_all <- netsent_posneg_all %>%
+  gather(key = sentiment_type, value = percentage, c(positive,negative))
+#netsent_all
+
+#graph
+netsent_barg_all <- ggplot(netsent_all, aes(x = sentiment_type, y = percentage, fill = sentiment_type)) + geom_bar(stat = 'identity', position = 'dodge') + labs(y = 'Sentiment Percentage', title = 'Overall Sentiment Distribution')
+
+netsent_barg_all
 #-------
 
 
