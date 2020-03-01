@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("textdata") 
 #install.packages("syuzhet")
 #install.packages('sentimentr')
+#install.packages('ggridges')
 
 library(tidyverse)
 library(tidytext)
@@ -25,6 +26,7 @@ library(tm)
 library(syuzhet)
 library(textdata)
 library(sentimentr)
+library(ggridges)
 
 ```
 
@@ -307,9 +309,48 @@ sentr_sent <- c %>%
   get_sentences() %>%
   sentiment_by(by = 'Show')
 
-sentr_barg <- ggplot(sentr_sent, aes(x = reorder(Show, ave_sentiment), y = ave_sentiment, fill = Show)) + geom_bar(stat= 'identity') + labs(x = 'Show', y = 'Average Sentiment', title = "Average Sentiment per Show")
+sentr_barg <- ggplot(sentr_sent, aes(x = reorder(Show, ave_sentiment), y = ave_sentiment, color = Show)) + geom_point(size=5,show.legend = F) + labs(x = 'Show', y = 'Average Sentiment', title = "Average Sentiment per Show")
 
 sentr_barg
+
+#-----
+
+#ggridges plot for sentiment distribution per response group
+c$num <- seq.int(nrow(c))
+
+sentr_byrev <- c %>%
+  get_sentences() %>%
+  sentiment_by(by = 'num') %>%
+  left_join(select(c,num,Show))
+
+#ggridges plot
+sent_dist_plot <- sentr_byrev %>%
+  mutate(r_levels=factor(Show)) %>% 
+  ggplot(aes(x = ave_sentiment, y = r_levels, group = r_levels,fill=r_levels)) +
+  geom_density_ridges(scale = 2.0, size = 0.25,alpha=0.4,show.legend=F) +
+  scale_x_continuous(limits=c(-.2, 0.8), expand = c(0.01, 0)) +
+  theme_bw() + 
+  geom_vline(aes(xintercept=0)) + 
+  labs(x = 'Sentiment', y = 'Response Group', title = 'Distribution of Sentiment by Response Group')
+
+sent_dist_plot
+
+#------
+
+
+#highlight - it doesn't work :(
+sentr_highlight <- c %>%
+  select(Text) %>%
+  get_sentences() %>%
+  sentiment_by(averaging.function = sentimentr::average_mean) %>%
+  highlight()
+
+highlight(sentr_highlight)
+
+# error message:  "Error in `[.data.table`(y, , list(sentiment = attributes(x)[["averaging.function"]](sentiment), : attempt to apply non-function"
+
+#----
+
 
 ```
 
