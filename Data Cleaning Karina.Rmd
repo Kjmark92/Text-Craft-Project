@@ -24,7 +24,7 @@ response <- cirque$Show
 
 #Shiny other input values
 #n_grams can be either 1 or 2
-n_grams = 2
+n_grams = 1
 
 #optimize K as a suggestion or allow users to choose K number
 k_value = 10
