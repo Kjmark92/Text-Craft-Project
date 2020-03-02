@@ -11,15 +11,27 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r results='hide', message=FALSE, warning=FALSE}
+#Libraries
 library(tidyverse)
 library(tidytext)
-library(scales)
-library(textstem)
+library(readr)
+```
+
+```{r}
+#Load the data
 
 #upload the data into shiny
 cirque <- read_csv("Data/Cirque_Train.csv")
 #med <- read_csv("Ghislene/Data/drug_combine.csv")
 ```
+
+```{r}
+#Preprocess:
+
+#Remove low TF-IDF words
+```
+
+
 
 ```{r results='hide', message=FALSE, warning=FALSE}
 ## SHINY INPUT VALUES
