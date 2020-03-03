@@ -26,6 +26,7 @@ library(tm)
 library(syuzhet)
 library(textdata)
 library(sentimentr)
+install.packages("ggridges")
 library(ggridges)
 
 ```
@@ -213,8 +214,10 @@ colnames(wc_tdm) <- c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadnes
 
 comparison.cloud(wc_tdm, random.order = TRUE, 
                  colors = brewer.pal(8,"Dark2"),
-                 title.size = 0.75, max.words = 250,
-                 scale = c(1.5, 0.4), rot.per = 0.325)
+                 title.size = 1,
+                 max.words = 30,
+                 scale = c(1, 1), 
+                 rot.per = 0.1)
 
 ```
 
@@ -259,18 +262,29 @@ nrc_sent_barg
 #graph - without facetwrap
 
 response_groups <- levels(factor(c$Show))
-
-for (r in response_groups){
-  print(nrc_sent %>%
-  filter(Show == r) %>%
-  ggplot(aes(x=reorder(sentiment,total),y=total,fill=sentiment)) + geom_bar(stat='identity',position='dodge')+ 
-  ylab('Word Count') +
+sentiment_per_response_list <- list()
+for (i in seq_along(response_groups)){
+  sentiment_per_response <-nrc_sent %>%
+  filter(Show == response_groups[i]) %>% ggplot(aes(x=reorder(sentiment,total),y=total)) + geom_bar(stat='identity',position='dodge') +   ylab('Word Count') +
   xlab('Sentiment') +
-  labs(title=paste('Sentiment Frequency for', r)) + 
-  theme(axis.text.x  = element_text(angle=90)))
+  #labs(title=paste('Sentiment Frequency for', r)) + 
+  theme(axis.text.x  = element_text(angle=45))
+  sentiment_per_response_list[[i]] <- sentiment_per_response
 }
 
 
+
+
+
+ggpubr::ggarrange(plotlist = (sentiment_per_response_list), ncol=1, nrow = length(sentiment_per_response_list))
+
+sentiment_freq_per_response <- grid.arrange(
+    grobs = (sentiment_per_response_list),
+    nrow = 5,
+    ncol = 1,
+    top = "Sentiment Frequency per Response",
+    heights=c(0.2,1,1,1,1)
+  )
 
 #-------
 
@@ -288,7 +302,7 @@ nrc_sent_barg_all <- nrc_sent_all %>%
   ylab('Word Count') +
   xlab('Sentiment') +
   labs(title='Sentiment Frequency') + 
-  theme(axis.text.x  = element_text(angle=90))
+  theme(axis.text.x  = element_text(angle=45))
 
 nrc_sent_barg_all
 
