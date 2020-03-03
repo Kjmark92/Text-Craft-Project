@@ -1,5 +1,5 @@
 
-
+require(shinyWidgets)
 require(devtools)
 require(tableHTML)
 require(shinythemes)
@@ -38,6 +38,13 @@ require(sentimentr)
 
 # HEADER
 header <- dashboardHeader(
+    dropdownMenu(
+        type = "notifications",
+        notificationItem(
+            text = "Learn more by watching this tutorial!",
+            icon = icon("chalkboard-teacher")
+        )
+    ),
     title = span("TextCraft",style = "font-size:25px"),
     titleWidth = 300
 )
@@ -50,13 +57,16 @@ sidebar <- dashboardSidebar(sidebarMenuOutput('menu'), width = 160)
 
 # BODY
 body <- dashboardBody(
-    tags$style(make_css(list('.box',c('font-size'),c('13px')))),
+    tags$style(HTML(
+      type = 'text/css', 
+                      '.navbar { background-color: white;}'
+    ),make_css(list('.box',c('font-size'),c('13px')))),
     #shinyDashboardThemes(theme = "grey_dark"),
     tabItems(
         # homepage tab content
         tabItem(tabName="t1",
                 fluidRow(
-                    box(title= span('Project Introduction',style="font-size:20px"),textOutput("projinfo"),height = 150,width = 12,solidHeader = TRUE,status="primary"))),
+                    box(title= span('Project Introduction',style="font-size:20px"),textOutput("projinfo"),height = 150,width = 12,solidHeader = TRUE,color="black"))),
         
         ## second tab content
         tabItem(tabName="t2",
@@ -64,15 +74,17 @@ body <- dashboardBody(
                     box(title = span('Enter API Link',style="font-size:20px") , textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), height = 150,solidHeader = TRUE,width = 4,background = "black" ),
                     #box(title = span('Query',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
                     box(title = span('Upload File',style= "font-size:20px"),fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),height = 150,solidHeader = TRUE,width = 4,background = "black" ),
-                    box( actionButton("runif", "Load",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
-                         padding:30px; font-size:170%;margin-left: 40px; margin-top: 20px"),
-                         actionButton("reset", "Clear",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
-                         padding:30px; font-size:170%;margin-left: 40px; margin-top: 20px;"),
+                    box(div(style="display:inline-block;width:100%;text-align: center; ",
+                    actionButton("runif", "Load",style="color: #fff; background-color: #DDA0DD; border-color: #2e6da4;
+                         padding:15px; font-size:150%;")),
+                    div(style="display:inline-block;width:100%;text-align: center;",
+                         actionButton("reset", "Clear",style="color: #fff; background-color: #DDA0DD; border-color: #2e6da4;
+                         padding:15px; font-size:150%; margin-top: 10px;")),
                          height = 150,solidHeader = TRUE,width = 3,background = "black" )), 
                     
                 
                 fluidRow(
-                    box(title = span('Contents',style = "font-size:20px"),column(width = 12,DT::dataTableOutput("contents"),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8,status = "primary"),
+                    box(title = span('Contents',style = "font-size:20px"),column(width = 12,DT::dataTableOutput("contents"),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8,color = "black"),
                     box(title = span('Select Required Features',style="font-size:20px") , uiOutput("select_corpus"),uiOutput("select_response"), height = 200,solidHeader = TRUE,width = 3,background = "black" ))
                     #box(title = span('Select Response',style="font-size:20px") , uiOutput("select_response"), height = 150,solidHeader = TRUE,width = 2,background = "black" ))
                 ),
@@ -85,16 +97,16 @@ body <- dashboardBody(
                                     div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',tableOutput("overall_wordcount")),
                                     div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',tableOutput("overall_tfidf")),
                                     div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',tableOutput("overall_suggestion"))), 
-                        height = 300,solidHeader = TRUE,width = 6,status="primary"),
+                        height = 300,solidHeader = TRUE,width = 6),
                     box(title = span('Annotation',style="font-size:20px"),
-                        splitLayout(cellWidths = c("30%","30%", "20%","20%"),
+                        splitLayout(cellWidths = c("25%","25%", "30%","20%"),
                                     uiOutput("select_custom_words",style = "height:225px"),
                                     div(style = 'overflow-y: scroll;max-height:225px;margin-left: 60px;',tableOutput("show_custom_words")),
                                     actionButton("annotate", "Annotate",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
-                                                 padding:20px; font-size:140%;margin-left: 20px; margin-top: 70px"),
+                                                 padding:8px; font-size:120%;margin-left: 20px; margin-top: 70px"),
                                     actionButton("reset_annotate", "Reset",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
-                                                 padding:20px; font-size:140%;margin-left: 20px; margin-top: 70px")),
-                        height = 300,solidHeader = TRUE,width = 6,status ="primary")),
+                                                 padding:8px; font-size:120%;margin-left: 20px; margin-top: 70px")),
+                        height = 300,solidHeader = TRUE,width = 6,color ="black")),
                 
                 fluidRow(
                     tableOutput("test")
@@ -107,7 +119,7 @@ body <- dashboardBody(
                                        uiOutput("select_seed",style = "width: 50%;margin-left: 40px;")),
                             div(style = 'max-width:90%;max-height:225px',verticalLayout(uiOutput("select_burning",style = "width: 50%;margin-left: 35px;"),
                                            uiOutput("select_number_topics",style = "margin-top:25px;height:160px;width: 50%;margin-left: 35px;")))),
-                        height = 350,solidHeader = TRUE,width = 6,status = "primary"),
+                        height = 350,solidHeader = TRUE,width = 6,color= "black"),
                     
                     actionButton("analyze", "Analyze Document Corpus",style="color: #fff; background-color: #7790BF; border-color: #2e6da4;
                                                  padding:40px; font-size:190%;margin-left: 200px; margin-top: 90px")
@@ -141,13 +153,15 @@ body <- dashboardBody(
         #fifth tab
         tabItem(tabName="t5",
                 fluidRow(
-                    box(title= span('Contact Info',style="font-size:20px"),uiOutput("moreinfo1"),height = 150,width = 12,solidHeader = TRUE,status="primary")))
+                    box(title= span('Contact Info',style="font-size:20px"),uiOutput("moreinfo1"),height = 150,width = 12,solidHeader = TRUE,color="black")))
     ))
 
 
 
 
-ui <- dashboardPage(header,sidebar,body,title = "URAT")
+ui <- dashboardPage(skin = "black",header,sidebar,body,title = "TextCraft")
+                    
+                 
 
 
 

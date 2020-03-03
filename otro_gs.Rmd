@@ -266,5 +266,170 @@ beta_spread %>%
   scale_x_reordered()
 ```
 
+Another attempt with med data:
+
+1. remove stopwords
+2. create bigrams
+3. remove bigrams with low tf-idf
+4. run topic model
+
+```{r}
+#Add id of each review:
+#med <- med %>% mutate(id = row_number()) %>%
+#  select(id,drug_name,comment)
+
+
+#un nest tokens (tokens = 1 word)
+med_text_cleaning_tokens <- med %>% 
+  unnest_tokens(word, comment)
+
+# remove numbers and signs
+med_text_cleaning_tokens$word <- gsub('[[:digit:]]+', '', med_text_cleaning_tokens$word)
+med_text_cleaning_tokens$word <- gsub('[[:punct:]]+', '', med_text_cleaning_tokens$word)
+
+# Remove stoptwords
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>% 
+  filter(!(nchar(word) == 1)) %>% 
+  anti_join(stop_words)
+
+
+
+# Remove empty rows (from the previuos cleaning process)
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>% filter(!(word==""))
+
+med_text_cleaning_tokens <- med_text_cleaning_tokens %>%
+  mutate(word = lemmatize_words(word))
+
+
+med_tokens <- med_text_cleaning_tokens %>% 
+  group_by(id) %>%
+  mutate(ind = row_number()) %>%
+  spread(key = ind, value = word)
+
+med_tokens[is.na(med_tokens)] <- ""
+med_tokens <- unite(med_tokens, text,-id, -drug_name, sep =" " )
+
+#Create Bi-grams:
+
+med_bigrams <- med_tokens %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+
+#Remove low TF-IDf
+#TF-IDF:
+med_bigrams2<- med_bigrams %>%
+  ungroup() %>%
+  count(drug_name,bigram,sort=TRUE) %>%
+  bind_tf_idf(bigram, drug_name, n) 
+
+med_bigrams_tf_idf0 <- med_bigrams2 %>%
+  filter(tf_idf == 0)
+
+length(unique(med_bigrams_tf_idf0$bigram))
+
+# Remove tfifd0
+prueba_med_bigram <- med_tokens %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  anti_join(med_bigrams_tf_idf0, by="bigram") %>%
+  count(id,bigram)
+
+
+dtm_prueba_med_bigram <- prueba_med_bigram %>%
+  cast_dtm(id, bigram, n)
+
+
+```
+
+
+
+```{r}
+#Topic model
+ap_lda_med_bigram <- LDA(dtm_prueba_med_bigram, k = 5, control = list(seed = 1234))
+ap_lda_med_bigram
+
+
+
+ap_topics_med_bigram <- tidy(ap_lda_med_bigram, matrix = "beta")
+ap_topics_med_bigram
+
+
+ap_top_terms_med_bigram <- ap_topics_med_bigram %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+ap_top_terms_med_bigram %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+
+
+#beta_spread_med_bigram <- ap_topics_med_bigram %>%
+#  mutate(topic = paste0("topic", topic)) %>%
+#  spread(topic, beta) %>%
+#  filter(topic1 > .001 | topic2 > .001) %>%
+#  mutate(log_ratio = log2(topic2 / topic1))
+#
+#beta_spread_med_bigram
+#
+#
+#beta_spread_med_bigram %>%
+#  top_n(25) %>%
+#  ggplot(aes(term, log_ratio)) +
+#  geom_col(show.legend = FALSE) +
+#  coord_flip() +
+#  scale_x_reordered()
+```
+
+
+What about using bigrams after taking out common words:
+
+```{r}
+eliminar_med <- unique(med_tf_idf0$word)
+
+
+# create tokes and remove those words:
+med_bigrams_clean <- med_tokens %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  filter(!word1 %in% eliminar_med) %>%
+  filter(!word2 %in% eliminar_med) %>%
+  unite(bigram, word1, word2, sep = " ") %>%
+  count(id,bigram)
+
+dtm_bigram <- med_bigrams_clean %>%
+  cast_dtm(id,bigram,n)
+
+#Topic model new:
+#Topic model
+lda_med_bigram <- LDA(dtm_bigram, k = 6, control = list(seed = 1234))
+lda_med_bigram
+
+
+
+topics_med_bigram <- tidy(lda_med_bigram, matrix = "beta")
+topics_med_bigram
+
+
+top_terms_med_bigram <- topics_med_bigram %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms_med_bigram %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+```
 
 
