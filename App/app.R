@@ -19,13 +19,15 @@ require(textstem)
 require(gridExtra)
 require(xtable)
 require(topicmodels)
-
+require(ggridges)
 require(rlang)
 require(wordcloud)
+require(wordcloud2)
 require(tm)
 require(syuzhet)
 require(textdata)
 require(sentimentr)
+require(shinycssloaders)
 
 
 ##########################################################################
@@ -34,7 +36,8 @@ require(sentimentr)
 
 ### DEFINE UI
 
-
+#Loading feature design
+options(spinner.color="#add8e6", spinner.color.background="#ffffff", spinner.size=1,spinner.type = 1)
 
 # HEADER
 header <- dashboardHeader(
@@ -72,7 +75,7 @@ body <- dashboardBody(
                     
                 
                 fluidRow(
-                    box(title = span('Contents',style = "font-size:20px"),column(width = 12,DT::dataTableOutput("contents"),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8,status = "primary"),
+                    box(title = span('Contents',style = "font-size:20px"),column(width = 12,withSpinner(DT::dataTableOutput("contents")),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8,status = "primary"),
                     box(title = span('Select Required Features',style="font-size:20px") , uiOutput("select_corpus"),uiOutput("select_response"), height = 200,solidHeader = TRUE,width = 3,background = "black" ))
                     #box(title = span('Select Response',style="font-size:20px") , uiOutput("select_response"), height = 150,solidHeader = TRUE,width = 2,background = "black" ))
                 ),
@@ -80,63 +83,95 @@ body <- dashboardBody(
         #third tab 
         tabItem(tabName="t3",
                 fluidRow(
-                    box(title = span('General Word Frequency',style="font-size:20px"), 
-                        splitLayout(cellWidths = c("33.3%", "33.3%","33.3%"), 
-                                    div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',tableOutput("overall_wordcount")),
-                                    div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',tableOutput("overall_tfidf")),
-                                    div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',tableOutput("overall_suggestion"))), 
-                        height = 300,solidHeader = TRUE,width = 6,status="primary"),
+                    box(title = span('Top 10 Word Counts',style="font-size:20px"), 
+                        #splitLayout(cellWidths = c("30%", "30%","40%"), 
+                                    div(style = 'overflow-y: scroll;max-height:225px;margin-left: 140px;',withSpinner(tableOutput("overall_wordcount"))),
+                                    #div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',withSpinner(tableOutput("overall_tfidf"))),
+                                    #div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',withSpinner(tableOutput("overall_suggestion")))), 
+                        height = 300,solidHeader = TRUE,width = 4,status="primary"),
+                    box(title = span('Top 10 TF-IDF scores ',style="font-size:20px"), 
+                        #splitLayout(cellWidths = c("30%", "30%","40%"), 
+                                    #div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',withSpinner(tableOutput("overall_wordcount"))),
+                                    div(style = 'overflow-y: scroll;max-height:225px;margin-left: 140px;',withSpinner(tableOutput("overall_tfidf"))),
+                                    #div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',withSpinner(tableOutput("overall_suggestion")))), 
+                        height = 300,solidHeader = TRUE,width = 4,status="primary"),
+                    box(title = span('Suggested Words to Remove',style="font-size:20px"), 
+                        #splitLayout(cellWidths = c("30%", "30%","40%"), 
+                                    #div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',withSpinner(tableOutput("overall_wordcount"))),
+                                    #div(style = 'overflow-y: scroll;max-height:225px;margin-left: 30px;',withSpinner(tableOutput("overall_tfidf"))),
+                                    div(style = 'overflow-y: scroll;max-height:225px;margin-left: 140px;',withSpinner(tableOutput("overall_suggestion"))), 
+                        height = 300,solidHeader = TRUE,width = 4,status="primary")
+                    
+                    ),
+                    
+                fluidRow(
                     box(title = span('Annotation',style="font-size:20px"),
-                        splitLayout(cellWidths = c("30%","30%", "20%","20%"),
+                        splitLayout(cellWidths = c("25%","25%","20%", "15%","15%"),
                                     uiOutput("select_custom_words",style = "height:225px"),
+                                    uiOutput("enter_custom_words",style = "height:225px"),
                                     div(style = 'overflow-y: scroll;max-height:225px;margin-left: 60px;',tableOutput("show_custom_words")),
                                     actionButton("annotate", "Annotate",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
                                                  padding:20px; font-size:140%;margin-left: 20px; margin-top: 70px"),
                                     actionButton("reset_annotate", "Reset",style="color: #fff; background-color: #337ab7; border-color: #2e6da4;
                                                  padding:20px; font-size:140%;margin-left: 20px; margin-top: 70px")),
-                        height = 300,solidHeader = TRUE,width = 6,status ="primary")),
+                        height = 300,solidHeader = TRUE,width = 12,status ="primary")),
                 
-                fluidRow(
-                    tableOutput("test")
-                ),
+                #fluidRow(
+                #    tableOutput("test")
+                #),
                
                 fluidRow(
                     box(title = span('Configuration',style="font-size:20px"),
                         splitLayout(cellWidths = c("50%","50%"),
                             verticalLayout(uiOutput("select_ngram",style = "height:100px;width: 50%;margin-left: 40px;"),
                                        uiOutput("select_seed",style = "width: 50%;margin-left: 40px;")),
-                            div(style = 'max-width:90%;max-height:225px',verticalLayout(uiOutput("select_burning",style = "width: 50%;margin-left: 35px;"),
+                            div(style = 'max-width:90%;max-height:225px',verticalLayout(uiOutput("select_number_words",style = "width: 50%;margin-left: 35px;"),
                                            uiOutput("select_number_topics",style = "margin-top:25px;height:160px;width: 50%;margin-left: 35px;")))),
                         height = 350,solidHeader = TRUE,width = 6,status = "primary"),
                     
                     actionButton("analyze", "Analyze Document Corpus",style="color: #fff; background-color: #7790BF; border-color: #2e6da4;
-                                                 padding:40px; font-size:190%;margin-left: 200px; margin-top: 90px")
-                    
-                    
+                                                 padding:30px; font-size:200%;margin-left: 200px; margin-top: 90px")
                     )
    
                 ),
                     
         
         #fourth tab
-        tabItem(tabName = "t4",
-                fluidRow(
-                   box(title= span('Select Model',style= "font-size:20px"),
-                       selectInput("selected_insights_model", choices = c("Topic Analysis","Sentiment Analysis"),label = ""),
-                       solidHeader = TRUE,width = 3,height = 150,background = "black")),
-                fluidRow(
-                    plotOutput("plot1")),
-                fluidRow(
-                    splitLayout(cellWidths = c("50%","50%"),
-                                plotOutput("plot2"),
-                                plotOutput("plot3"))),
-                fluidRow(
-                    plotOutput("plot4")),
-                fluidRow(
-                    tableOutput("test1"))
-     
+        tabItem(
+            tabName = "t4",
+            tabsetPanel(
+                tabPanel("Topic Analysis",
+                         
+                         fluidRow(
+                             br(),
+                             column(12, align = "center",withSpinner(plotOutput("t_plot1", width = "60%")),br()))),
+                         
+                tabPanel("Sentiment Analysis",
+                         fluidRow(
+                             br(),
+                             column(12, align = "center",withSpinner(plotOutput("s_plot1", width = "60%")),br())),
+                         fluidRow(
+                             column(12, align = "center",withSpinner(plotOutput("s_plot2", width = "60%")),br())),
+                         fluidRow(
+                             column(12, align = "center",withSpinner(plotOutput("s_plot3", width = "60%")),br())),
+                         fluidRow(
+                             column(12, align = "center",withSpinner(plotOutput("s_plot4", width = "60%")),br())),
+                         fluidRow(
+                             column(12, align = "center",withSpinner(plotOutput("s_plot5", width = "60%")),br())),
+                         fluidRow(
+                             column(12, align = "center",withSpinner(plotOutput("s_plot6", width = "60%")),br())),
+                         fluidRow(
+                             column(12, align = "center",withSpinner(wordcloud2Output("s_wcplot1", width = "60%")),br()))
+                         ))
                 ),
-        
+            
+            
+                #fluidRow(
+                   #box(title= span('Select Model',style= "font-size:20px"),
+                #       selectInput("selected_insights_model", choices = c("Topic Analysis","Sentiment Analysis"),label = ""),
+                #       solidHeader = TRUE,width = 3,height = 150,background = "black")),
+                
+    
         
         #fifth tab
         tabItem(tabName="t5",
@@ -210,17 +245,17 @@ server <- function(input, output){
         inFile <- input$file1
         if (is.null(v$data)){
             return(NULL)
-        }
+                }
         if (api == "" && v$data == 1){
             table_out <- read.csv(inFile$datapath)
-        }
+                }
         else {
             source("Get_API_Response.R")
             table_out <- test_api(api)
-        }
+                }
         return(table_out)
+        
     })
-    
     
     
     
@@ -252,10 +287,13 @@ server <- function(input, output){
     
     # ANNOTATE DATA BUTTON
     observeEvent(input$annotate, {
-        if (length(selected_remove_custom_words) != 0){
+        if (length(input$selected_remove_custom_words) != 0 | input$entered_custom_words != "" ){
             a$data <- 1
             words_to_remove1 <- input$selected_remove_custom_words
+            words_to_remove2 <- unlist(strsplit(as.character(input$entered_custom_words),",",fixed=TRUE))
             words_to_remove$data <- append(words_to_remove$data ,words_to_remove1)
+            words_to_remove$data <- append(words_to_remove$data ,words_to_remove2)
+            
         }
     })
     
@@ -264,7 +302,7 @@ server <- function(input, output){
         a$data <- NULL
     })
     
-    # GET USER DEFINED WORDS
+    # GET USER DEFINED SELECTED WORDS
     selected_remove_custom_words <- reactive({
         if (is.null(a$data)){
             return(c())
@@ -273,6 +311,8 @@ server <- function(input, output){
             return(words_to_remove$data)
         }
     }) 
+    
+    
     
    
     # SHOW TOP WORDCOUNT DATAFRAME
@@ -286,8 +326,7 @@ server <- function(input, output){
         selected_remove_custom_words <- selected_remove_custom_words()
         df <- get_overall_wordcount(df,as.character(corpus_name),as.character(response_name),selected_remove_custom_words)
         df
-        },caption = "Top 10 word counts",caption.placement = getOption("xtable.caption.placement", "top"), 
-    caption.width = getOption("xtable.caption.width", NULL))
+        })
     
     
     # SHOW TOP TFIDF DATAFRAME
@@ -299,10 +338,9 @@ server <- function(input, output){
         df <- df %>% select(corpus_name,response_name)
         source("Exploratory_Analysis.R")
         selected_remove_custom_words <- selected_remove_custom_words()
-        df <- get_overall_wordcount(df,as.character(corpus_name),as.character(response_name),selected_remove_custom_words)
+        df <- get_overall_tfidf(df,as.character(corpus_name),as.character(response_name),selected_remove_custom_words)
         df
-    },caption = "Top 10 word tf-idf scores",caption.placement = getOption("xtable.caption.placement", "top"), 
-    caption.width = getOption("xtable.caption.width", NULL))
+    })
     
 
     
@@ -316,8 +354,7 @@ server <- function(input, output){
         source("Exploratory_Analysis.R")
         df <- get_overall_suggestion(df,as.character(corpus_name),as.character(response_name),selected_remove_custom_words)
         df
-    }, caption = "Suggested words to remove",caption.placement = getOption("xtable.caption.placement", "top"), 
-    caption.width = getOption("xtable.caption.width", NULL))
+    })
     
     
     
@@ -330,14 +367,19 @@ server <- function(input, output){
         df <- df %>% select(corpus_name,response_name)
         source("Exploratory_Analysis.R")
         df <- get_overall_suggestion(df,as.character(corpus_name),as.character(response_name),selected_remove_custom_words)
-        selectInput("selected_remove_custom_words", choices = df$word ,multiple = TRUE, label = "Select the words to remove")
+        selectInput("selected_remove_custom_words", choices = df$Word ,multiple = TRUE, label = "Select the words to remove")
+    })
+    
+    
+    output$enter_custom_words <- renderUI({
+        textInput("entered_custom_words", label = "Enter custom words to remove (Separate by commas)")
     })
     
     
     # SHOW USER REMOVED WORDS
     output$show_custom_words <- renderTable({
-        selected_remove_custom_words()
-    }, caption = "Words removed",caption.placement = getOption("xtable.caption.placement", "top"), 
+        data.frame( Word = selected_remove_custom_words())
+    }, caption = "Words Removed",caption.placement = getOption("xtable.caption.placement", "top"), 
     caption.width = getOption("xtable.caption.width", NULL))
     
     
@@ -368,18 +410,17 @@ server <- function(input, output){
         selectInput("selected_ngram", choices = c(1,2), label = "Select ngram type")
     })
     
-    
-    # SELECT CONFIGURATION NGRAM COLUMN
+    # SELECT CONFIGURATION SEED COLUMN
     output$select_seed <- renderUI({
         textInput("selected_seed", label = "Enter seed value", value = 1234)
     })
     
-    # SELECT CONFIGURATION NGRAM COLUMN
-    output$select_burning <- renderUI({
-        textInput("selected_burning", label = "Select burning ratio" , value = 1)
+    # SELECT CONFIGURATION NUMBER OF WORDS COLUMN
+    output$select_number_words <- renderUI({
+        textInput("selected_number_words", label = "Enter number of top words" , value = 10)
     })
     
-    # SELECT CONFIGURATION NGRAM COLUMN
+    # SELECT CONFIGURATION NUMBER OF TOPICS COLUMN
     output$select_number_topics <- renderUI({
         selectInput("selected_number_topics", choices = seq(2,25,1), label = "Choose number of topics")
     })
@@ -389,34 +430,38 @@ server <- function(input, output){
     
     # RUN LDA REACTIVE
     Run_LDA <- reactive({
-        selected_ngram <- input$selected_ngram
-        selected_seed <- input$selected_seed
-        selected_burning <- input$selected_burning
-        selected_number_topics <- input$selected_number_topics
-        corpus_name <- input$selected_corpus
-        response_name <- input$selected_response
-        clean_data <- Clean_data()
-        source("Model_Analyze.R")
-        lda_result <- run_lda(clean_data,as.character(corpus_name),as.character(response_name),as.numeric(selected_ngram),
-                              as.numeric(selected_seed),as.numeric(selected_burning),as.numeric(selected_number_topics))
-        return(lda_result)
+
+                selected_ngram <- input$selected_ngram
+                selected_seed <- input$selected_seed
+                selected_number_words <- input$selected_number_words
+                selected_number_topics <- input$selected_number_topics
+                corpus_name <- input$selected_corpus
+                response_name <- input$selected_response
+                clean_data <- Clean_data()
+                source("Model_Analyze.R")
+                lda_result <- run_lda(clean_data,as.character(corpus_name),as.character(response_name),as.numeric(selected_ngram),
+                                      as.numeric(selected_seed),as.numeric(selected_number_words),as.numeric(selected_number_topics))
+                return(lda_result)
+
+        
     })
     
     
     
     # RUN SENTIMENT REACTIVE
     Run_Sentiment <- reactive({
-        selected_ngram <- input$selected_ngram
-        selected_seed <- input$selected_seed
-        selected_burning <- input$selected_burning
-        selected_number_topics <- input$selected_number_topics
-        corpus_name <- input$selected_corpus
-        response_name <- input$selected_response
-        clean_data <- Clean_data()
-        source("Model_Analyze.R")
-        sentiment_result <- run_sentiment(clean_data,as.character(corpus_name),as.character(response_name),as.numeric(selected_ngram),
-                              as.numeric(selected_seed),as.numeric(selected_burning),as.numeric(selected_number_topics))
-        return(sentiment_result)
+                selected_ngram <- input$selected_ngram
+                selected_seed <- input$selected_seed
+                selected_number_words <- input$selected_number_words
+                selected_number_topics <- input$selected_number_topics
+                corpus_name <- input$selected_corpus
+                response_name <- input$selected_response
+                clean_data <- Clean_data()
+                source("Model_Analyze.R")
+                sentiment_result <- run_sentiment(clean_data,as.character(corpus_name),as.character(response_name),as.numeric(selected_ngram),
+                                                  as.numeric(selected_seed),as.numeric(selected_number_words),as.numeric(selected_number_topics))
+                return(sentiment_result)
+        
     })
     
     
@@ -428,16 +473,27 @@ server <- function(input, output){
     
     # RUN MODELLING AND ANALYZE TEXT ON CLICK
     observeEvent(input$analyze, {
-        #LDA Results
-        #lda_result$data <- Run_LDA()[[1]]
-        lda_result$plot <- Run_LDA()[[2]]
         
-        #Sentiment Results
-        #sentiment_result$test1 <- Run_Sentiment()[[1]]
-        #sentiment_result$plot1 <- Run_Sentiment()[[1]]
-        sentiment_result$plot2 <- Run_Sentiment()[[2]]
-        sentiment_result$plot3 <- Run_Sentiment()[[3]]
-        sentiment_result$plot4 <- Run_Sentiment()[[4]]
+       
+        isolate({
+            withProgress({
+                setProgress(message = "Processing corpus...")
+                
+                #LDA Results
+                lda_result$t_plot1 <- Run_LDA()[[1]]
+        
+                #Sentiment Results
+                sentiment_result$s_wcplot1 <- Run_Sentiment()[[1]]
+                sentiment_result$s_plot1 <- Run_Sentiment()[[2]]
+                sentiment_result$s_plot2 <- Run_Sentiment()[[3]]
+                sentiment_result$s_plot3 <- Run_Sentiment()[[4]]
+                sentiment_result$s_plot4 <- Run_Sentiment()[[5]]
+                sentiment_result$s_plot5 <- Run_Sentiment()[[6]]
+                sentiment_result$s_plot6 <- Run_Sentiment()[[7]]
+                
+            })
+        })
+        
     })
     
     
@@ -447,67 +503,50 @@ server <- function(input, output){
 
     
     # PLOT-1 
-    output$plot1 <- renderPlot({
-        selected_insights_model <- input$selected_insights_model
+    output$t_plot1 <- renderPlot({
+            lda_result$t_plot1
+    })
         
-        if (selected_insights_model == "Topic Analysis"){
-            lda_result$plot
-        }
-        else{
-            sentiment_result$plot3
-        }
+    output$s_plot1 <- renderPlot({
+        sentiment_result$s_plot1
     })
     
     
-    
     # PLOT-2
-    output$plot2 <- renderPlot({
-        selected_insights_model <- input$selected_insights_model
-        
-        if (selected_insights_model == "Topic Analysis"){
-            
-        }
-        else{
-            sentiment_result$plot2
-        }
+    output$s_plot2 <- renderPlot({
+            sentiment_result$s_plot2
     })
     
     
     # PLOT-3
-    output$plot3 <- renderPlot({
-        selected_insights_model <- input$selected_insights_model
-        
-        if (selected_insights_model == "Topic Analysis"){
-            
-        }
-        else{
-            sentiment_result$plot4
-        }
+    output$s_plot3 <- renderPlot({
+        sentiment_result$s_plot3
     })
     
     
     # PLOT-4
-    output$plot4 <- renderPlot({
-        selected_insights_model <- input$selected_insights_model
-        
-        if (selected_insights_model == "Topic Analysis"){
-            
-        }
-        else{
-            #sentiment_result$plot4
-        }
+    output$s_plot4 <- renderPlot({
+        sentiment_result$s_plot4
     })
     
-    output$test1 <- renderTable(({
-        #sentiment_result$test1
-    }))
+    # PLOT-5
+    output$s_plot5 <- renderPlot({
+        sentiment_result$s_plot5
+    })
+    
+    # PLOT-6
+    output$s_plot6 <- renderPlot({
+        sentiment_result$s_plot6
+    })
     
     
-    
+    # PLOT-7
+    output$wcplot1 <- renderWordcloud2({
+            sentiment_result$s_wcplot1
+    })
     
     
 }
-
 
 
 
