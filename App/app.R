@@ -100,23 +100,24 @@ body <- dashboardBody(
         tabItem(tabName="t1",
                 fluidRow(
                     box(title= span('Project Introduction',style="font-size:20px;"),
-                        #style = "background-color:#F0F8FF;height:710px",
                         style = "background-color:#F0F8FF; height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
                         textOutput("projinfo"),height = 120,width = 12,solidHeader = TRUE))),
         
         ## second tab content
         tabItem(tabName="t2",
+                
                 fluidRow(
                     box(#title = span('Enter API Link',style="font-size:20px;") ,
-                        style = "background-color:#F0F8FF; height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970" ,textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), height = 120,solidHeader = TRUE,width = 4),
-                    #box(title = span('Query',style="font-size:20px"),textOutput("txtOutput1"),height = 150,solidHeader = TRUE,width = 2,   tags$head(tags$style("#txtOutput1{color: orange;font-size: 45px;font-style: bold;}")),background = "black" ),
+                        style = "background-color:#F0F8FF; height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970" ,
+                        textInput("apilink", label = "API", value = "", width = NULL,placeholder = "Enter API Here.."), 
+                        height = 120,solidHeader = TRUE,width = 4),
                     box(#title = span('Upload File',style= "font-size:20px"),
-                        style = "background-color:#F0F8FF;height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),height = 120,solidHeader = TRUE,width = 4),
+                        style = "background-color:#F0F8FF;height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
+                        fileInput("file1", "Choose CSV File",accept = c("text/csv","text/comma-separated-values,text/plain",".csv")),
+                        height = 120,solidHeader = TRUE,width = 4),
                     box(style = "background-color:#F0F8FF;height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
-                        
                         actionButton("runif", "Load",style="color: #fff; background-color: #191970; border-color: #708090;
                          padding:20px; font-size:120%;margin-left: 40px; margin-top: 10px"),
-                        
                         actionButton("reset", "Clear",style="color: #fff; background-color: #191970; border-color: #708090;
                          padding:20px; font-size:120%;margin-left:20px; margin-top: 10px;"),
                         height = 120,solidHeader = TRUE,width = 3)), 
@@ -124,33 +125,35 @@ body <- dashboardBody(
                 
                 fluidRow(
                     box(title = span('Contents',style = "font-size:20px"),style = "background-color:#F0F8FF;height:555px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
-                        column(width = 12,withSpinner(DT::dataTableOutput("contents")),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), height = 595,solidHeader = TRUE,width = 8),
-                    box(title = span('Select Required Features',style="font-size:20px"), style = "background-color:#F0F8FF;height:180px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",uiOutput("select_corpus"),uiOutput("select_response"), height = 220,solidHeader = TRUE,width = 3))
-                #box(title = span('Select Response',style="font-size:20px") , uiOutput("select_response"), height = 150,solidHeader = TRUE,width = 2,background = "black" ))
-        ),
+                        column(width = 12,withSpinner(DT::dataTableOutput("contents")),
+                               style = "height:500px; overflow-y: scroll;overflow-x: scroll;"), 
+                        height = 595,solidHeader = TRUE,width = 8),
+                    box(title = span('Select Required Features',style="font-size:20px"), 
+                        style = "background-color:#F0F8FF;height:180px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
+                        uiOutput("select_corpus"),
+                        uiOutput("select_response"), 
+                        height = 220,solidHeader = TRUE,width = 3))
+                  ),
+        
         
         #third tab 
         tabItem(tabName="t3",
                 fluidRow(
                     box(title = span('Top 10 Word Counts',style="font-size:20px"), 
                         style = "background-color:#F0F8FF; height:260px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
-                
-                        div(style = 'overflow-y: scroll;max-height:225px;display:inline-block;width:100%;margin-left:40px;',withSpinner(tableOutput("overall_wordcount"))),
-           
+                        div(style = 'overflow-y: scroll;max-height:225px;display:inline-block;width:100%;margin-left:40px;',
+                            withSpinner(tableOutput("overall_wordcount"))),
                         height = 300,solidHeader = TRUE,width = 4),
                     box(title = span('Top 10 TF-IDF scores ',style="font-size:20px"), 
                         style = "background-color:#F0F8FF; height:260px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
-                      
-                        div(style = 'overflow-y: scroll;max-height:225px;display:inline-block;width:100%;margin-left:40px;',withSpinner(tableOutput("overall_tfidf"))),
-                       
-                        height = 300,solidHeader = TRUE,width = 4),
+                        div(style = 'overflow-y: scroll;max-height:225px;display:inline-block;width:100%;margin-left:40px;',
+                            withSpinner(tableOutput("overall_tfidf"))),
+                       height = 300,solidHeader = TRUE,width = 4),
                     box(title = span('Suggested Words to Remove',style="font-size:20px"), 
                         style = "background-color:#F0F8FF; height:260px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
-                        
-                        div(style = 'overflow-y: scroll;max-height:225px;display:inline-block;width:100%;margin-left:40px;',withSpinner(tableOutput("overall_suggestion"))), 
-                        height = 300,solidHeader = TRUE,width = 4)
-                    
-                ),
+                        div(style = 'overflow-y: scroll;max-height:225px;display:inline-block;width:100%;margin-left:40px;',
+                            withSpinner(tableOutput("overall_suggestion"))), 
+                        height = 300,solidHeader = TRUE,width = 4)),
                 
                 fluidRow(
                     box(title = span('Annotation',style="font-size:20px"),
@@ -179,8 +182,7 @@ body <- dashboardBody(
                         height = 350,solidHeader = TRUE,width = 12),
                     div(style="display:inline-block;width:100%;text-align: center;",
                         actionButton("analyze", "Analyze Document Corpus",style="color: #fff; background-color: #191970; border-color: #708090;
-                                                 padding:20px; font-size:150%;")),br(),br()
-                )
+                                                 padding:20px; font-size:150%;")),br(),br())
                 
         ),
         
@@ -200,7 +202,7 @@ body <- dashboardBody(
                              br(),
                              column(12, align = "center",withSpinner(plotOutput("s_plot1", width = "60%")),br())),
                          fluidRow(
-                             column(12, align = "center",withSpinner(plotOutput("s_plot2", width = "60%")),br())),
+                             column(12, align = "center",uiOutput("plotsfor_s_plot2"),br())),
                          fluidRow(
                              column(12, align = "center",withSpinner(plotOutput("s_plot3", width = "60%")),br())),
                          fluidRow(
@@ -250,11 +252,8 @@ server <- function(input, output){
     
     
     output$projinfo <- renderText({
-        #t <- print(source("Get_API_Response.R")[["value"]])
-        #datatable(t)
         "Welcome to the FUTURE! Conduct your own topic model and sentiment analysis. 
           Proceed to the next tab to get started!"
-        
     })
     
     
@@ -300,8 +299,8 @@ server <- function(input, output){
             table_out <- test_api(api)
         }
         return(table_out)
-        
     })
+    
     
     
     
@@ -321,6 +320,28 @@ server <- function(input, output){
     output$select_response <- renderUI({
         selectInput("selected_response", choices = colnames(table_out()), label = "Feature Response")
     })
+    
+    
+    # GET NUMBER OF RESPONSES
+    number_of_responses <- reactive({
+        corpus_name <- input$selected_corpus
+        response_name <- input$selected_response
+        df <- data.frame(table_out())
+        df <- df %>% select(corpus_name,response_name)
+        source("Exploratory_Analysis.R")
+        n <- get_number_responses(df,as.character(response_name))
+        return(n)
+    })
+    
+    
+    
+    
+    #TEST 
+    #output$test <- renderText({
+    #    number_of_responses()
+    #})
+    
+    
     
     
     
@@ -346,6 +367,7 @@ server <- function(input, output){
     #RESET ANNOTATE BUTTON
     observeEvent(input$reset_annotate, {
         a$data <- NULL
+        words_to_remove$data <- NULL
     })
     
     # GET USER DEFINED SELECTED WORDS
@@ -416,7 +438,7 @@ server <- function(input, output){
         selectInput("selected_remove_custom_words", choices = df$Word ,multiple = TRUE, label = "Select the words to remove")
     })
     
-    
+    # USER REMOVE CUSTOM WORDS
     output$enter_custom_words <- renderUI({
         textInput("entered_custom_words", label = "Enter custom words to remove (Separate by commas)")
     })
@@ -444,10 +466,7 @@ server <- function(input, output){
     
     
     
-    #TEST CLEAN DATA
-    output$test <- renderTable({
-        head(Clean_data())
-    })
+    
     
     
     
@@ -523,6 +542,7 @@ server <- function(input, output){
         
         isolate({
             withProgress({
+                
                 setProgress(message = "Processing corpus...")
                 
                 #LDA Results
@@ -536,56 +556,66 @@ server <- function(input, output){
                 sentiment_result$s_plot5 <- Run_Sentiment()[[5]]
                 sentiment_result$s_plot6 <- Run_Sentiment()[[6]]
                 
+                ###################################### INSIGHTS TAB
+                
+                # PLOT-1 
+                output$t_plot1 <- renderPlot({
+                    lda_result$t_plot1
+                })
+                output$s_plot1 <- renderPlot({
+                    sentiment_result$s_plot1
+                })
+                
+                
+                
+                # PLOT-2
+                ###### Dynamic
+                output$plotsfor_s_plot2 <- renderUI({
+                    plot_output_list <- lapply(1:as.numeric(number_of_responses()), function(i) {
+                        plotname <- paste("plot", i, sep="")
+                        withSpinner(plotOutput(plotname, width = "60%")) 
+                    })
+                    do.call(tagList, plot_output_list)
+                })
+                for (i in 1:as.numeric(number_of_responses())) {
+                    local({
+                        my_i <- i
+                        plotname <- paste("plot", my_i, sep="")
+                        output[[plotname]] <- renderPlot({
+                            sentiment_result$s_plot2[[my_i]]
+                        })
+                    })
+                }
+                
+                
+                
+                # PLOT-3
+                output$s_plot3 <- renderPlot({
+                    sentiment_result$s_plot3
+                })
+                
+                
+                # PLOT-4
+                output$s_plot4 <- renderPlot({
+                    sentiment_result$s_plot4
+                })
+                
+                # PLOT-5
+                output$s_plot5 <- renderPlot({
+                    sentiment_result$s_plot5
+                })
+                
+                # PLOT-6
+                output$s_plot6 <- renderPlot({
+                    sentiment_result$s_plot6
+                })
+                
+                
             })
         })
         
     })
     
-    
-    
-    ###################################### INSIGHTS TAB
-    
-    
-    
-    # PLOT-1 
-    output$t_plot1 <- renderPlot({
-        lda_result$t_plot1
-    })
-    
-    output$s_plot1 <- renderPlot({
-        sentiment_result$s_plot1
-    })
-    
-    
-    # PLOT-2
-    output$s_plot2 <- renderPlot({
-        sentiment_result$s_plot2
-    })
-    
-    
-    # PLOT-3
-    output$s_plot3 <- renderPlot({
-        sentiment_result$s_plot3
-    })
-    
-    
-    # PLOT-4
-    output$s_plot4 <- renderPlot({
-        sentiment_result$s_plot4
-    })
-    
-    # PLOT-5
-    output$s_plot5 <- renderPlot({
-        sentiment_result$s_plot5
-    })
-    
-    # PLOT-6
-    output$s_plot6 <- renderPlot({
-        sentiment_result$s_plot6
-    })
-    
-    
-
     
     
 }

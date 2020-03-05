@@ -1,4 +1,12 @@
 
+#Sent to reactive - Number of responses
+get_number_responses <- function(df,response_name){
+  responses <- (df %>% group_by(!!sym(response_name)) %>% summarise(Count = n()))[,1]
+  number_of_responses <- length(unlist(responses))
+  return(number_of_responses)
+}
+
+
 
 
 #Sent to reactive - Cleaned Text Corpus

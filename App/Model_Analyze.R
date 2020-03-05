@@ -135,13 +135,6 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
     sentiment_per_response_list[[i]] <- sentiment_per_response
   }
   
-  #sentiment_freq_per_response <- grid.arrange(
-  #  grobs = sentiment_per_response_list,
-  #  nrow = length(sentiment_per_response_list),
-  #  ncol = 1,
-  #  top = "Sentiment Frequency per Response",
-  #)
-  
   
   
   # Average Sentiment per Response - PLOT 3
