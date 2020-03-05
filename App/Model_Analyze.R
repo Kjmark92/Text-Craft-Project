@@ -79,44 +79,9 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
   nrc <- get_sentiments("nrc")
   
   
-  #Top sentiment comparison word cloud - PLOT 1
-  
-  t_t <- clean_data[[(corpus_name)]]
-  
-  s <- get_nrc_sentiment(t_t)
-  sent_ <- colSums(s)
-  sent_sum <- data.frame(count = sent_, sentiment = names(sent_))
-  sent_sum$sentiment= factor(sent_sum$sentiment, levels = sent_sum$sentiment[order(sent_sum$count, decreasing = TRUE)])
   
   
-  ang <- paste(t_t[s$anger>0], collapse = " ")
-  ant <- paste(t_t[s$anticipation>0], collapse = " ")
-  disg <- paste(t_t[s$disgust>0], collapse = " ")
-  fear <- paste(t_t[s$fear>0], collapse = " ")
-  joy <- paste(t_t[s$joy>0], collapse = " ")
-  sad <- paste(t_t[s$sadness>0], collapse = " ")
-  surp <- paste(t_t[s$surprise>0], collapse = " ")
-  trust <- paste(t_t[s$trust>0], collapse = " ")
-  
-  wc_sents <- c(ang, ant, disg, fear, joy, sad, surp, trust)
-  
-  wc_corpus <- Corpus(VectorSource(wc_sents))
-  
-  wc_tdm <- TermDocumentMatrix(wc_corpus)
-  wc_tdm <- as.matrix(wc_tdm)
-  
-  colnames(wc_tdm) <- c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
-  
-  comparisioncloud_per_sentiment <- comparison.cloud(wc_tdm, random.order = TRUE, 
-                   colors = brewer.pal(8,"Dark2"),
-                   title.size = 0.6, max.words = 40,
-                   scale = c(1, 1),
-                   rot.per = 0.2)
-  
-  
-  
-  
-  # General Sentiment count in whole data - PLOT 2
+  # General Sentiment count in whole data - PLOT 1
   
   
   
@@ -140,7 +105,7 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
   
   
   
-  #Sentiment Frequency per response - PLOT 3
+  #Sentiment Frequency per response - PLOT 2
   
   
   sentiment.orientation <- data.frame(orientation = c(rep("Positive",5),rep("Negative",5)),
@@ -179,7 +144,7 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
   
   
   
-  # Average Sentiment per Response - PLOT 4
+  # Average Sentiment per Response - PLOT 3
   
   sentr_sent <- clean_data %>%
     get_sentences() %>%
@@ -190,7 +155,7 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
   
   
   
-  # Mean SD Sentiment Score per response - PLOT 5
+  # Mean SD Sentiment Score per response - PLOT 4
   
   #ggridges plot for sentiment distribution per response group
   clean_data$num <- seq.int(nrow(clean_data))
@@ -212,7 +177,7 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
   
   
   
-  #positive/negative sentiment distribution total - PLOT 6
+  #positive/negative sentiment distribution total - PLOT 5
   
   netsent_posneg <- clean_data %>%
     select( !!sym(corpus_name)) %>%
@@ -236,7 +201,7 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
   
  
   
-  #positive/negative sentiment distribution per response - PLOT 7 
+  #positive/negative sentiment distribution per response - PLOT 6
   
   netsent_posneg <- clean_data %>%
     select(!!sym(response_name), !!sym(corpus_name)) %>%
@@ -263,7 +228,7 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
   
   
   
-  newlist <- list(comparisioncloud_per_sentiment = comparisioncloud_per_sentiment,
+  newlist <- list(
                   sentiment_freq_total = sentiment_freq_total,
                   sentiment_per_response_list = sentiment_per_response_list,
                   average_sentiment_per_response = average_sentiment_per_response,
