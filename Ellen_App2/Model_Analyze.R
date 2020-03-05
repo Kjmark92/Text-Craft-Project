@@ -165,7 +165,7 @@ run_sentiment <- function(clean_data,corpus_name,response_name,selected_ngram,se
             ggplot(aes(x=reorder(sentiment,total),y=total, fill = sentiment)) + geom_bar(stat='identity',position='dodge')+ 
             ylab('Word Count') +
             xlab('Sentiment') +
-            labs(title=paste('Sentiment Frequency for', r)) + 
+            labs(title=paste('Sentiment Frequency for', response_groups[i])) + 
             theme(axis.text.x  = element_text(angle=45))+ theme_minimal()
     sentiment_per_response_list[[i]] <- sentiment_per_response
   }

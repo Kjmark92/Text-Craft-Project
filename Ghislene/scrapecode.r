@@ -116,6 +116,8 @@ ScrapeDrugWebMD <- function(baseURL){
   
 }
 
+
+
 ## Celexa
 theURL <- 'https://www.webmd.com/drugs/drugreview-8603-Celexa-oral.aspx?drugid=8603&drugname=Celexa-oral'
 theReviews <- ScrapeDrugWebMD(theURL)
@@ -147,9 +149,48 @@ theReviews_paxil <- ScrapeDrugWebMD(theURL)
 saveRDS(theReviews_paxil,'Ghislene/data/Paxil.rds')
 
 
+## Zoloft
+theURL <- 'https://www.webmd.com/drugs/drugreview-35-Zoloft+oral.aspx?drugid=35&drugname=Zoloft+oral'
+theReviews_zoloft <- ScrapeDrugWebMD(theURL)
+theReviews_zoloft <- theReviews_zoloft%>%
+  mutate(drug_name = "Zoloft")
+saveRDS(theReviews_zoloft,'Ghislene/data/Zoloft.rds')
 
+## Hydrocodone (3000 reviews, painreliever narcotic, cough suppressant)
+theURL <- 'https://www.webmd.com/drugs/drugreview-251-hydrocodone-acetaminophen-oral.aspx?drugid=251&drugname=hydrocodone-acetaminophen-oral'
+theReviews_hydrocodone <- ScrapeDrugWebMD(theURL)
+theReviews_hydrocodone <- theReviews_hydrocodone%>%
+  mutate(drug_name = "Hydrocodone")
+saveRDS(theReviews_hydrocodone,'Ghislene/data/Hydrocodone.rds')
 
+## Neurontin (2000 reviews, gabapentin, can treat pain and seizures)
+theURL <- 'https://www.webmd.com/drugs/drugreview-9845-Neurontin-oral.aspx?drugid=9845&drugname=Neurontin-oral'
+theReviews_Neurontin <- ScrapeDrugWebMD(theURL)
+theReviews_Neurontin <- theReviews_Neurontin%>%
+  mutate(drug_name = "Neurontin")
+saveRDS(theReviews_Neurontin,'Ghislene/data/Neurontin.rds')
 
+## Vicodin (1421, opiates)
+theURL <- 'https://www.webmd.com/drugs/drugreview-3459-Vicodin-oral.aspx?drugid=3459&drugname=Vicodin-oral'
+theReviews_Vicodin <- ScrapeDrugWebMD(theURL)
+theReviews_Vicodin <- theReviews_Vicodin%>%
+  mutate(drug_name = "Vicodin")
+saveRDS(theReviews_Vicodin,'Ghislene/data/Vicodin.rds')
 
+## Xanax (2950 reviews,antianxiety)
+theURL <- 'https://www.webmd.com/drugs/drugreview-9824-xanax.aspx?drugid=9824&drugname=xanax'
+theReviews_Xanax<- ScrapeDrugWebMD(theURL)
+theReviews_Xanax <- theReviews_Xanax%>%
+  mutate(drug_name = "Xanax")
+saveRDS(theReviews_Xanax,'Ghislene/data/Xanax.rds')
 
+## Percocet(1541 reviews, opiates)
+theURL <- 'https://www.webmd.com/drugs/drugreview-7277-percocet.aspx?drugid=7277&drugname=percocet'
+theReviews_Percocet<- ScrapeDrugWebMD(theURL)
+theReviews_Percocet<- theReviews_Percocet%>%
+  mutate(drug_name = "Percocet")
+saveRDS(theReviews_Percocet,'Ghislene/data/Percocet.rds')
 
+meddata2<-rbind(theReviews_zoloft,theReviews_hydrocodone,theReviews_Neurontin,theReviews_Vicodin,theReviews_Xanax,theReviews_Percocet)
+write.csv(meddata2,'Ghislene/data/meddata2.csv', row.names = TRUE)
+saveRDS(meddata2,'Ghislene/data/meddata2.rds')
