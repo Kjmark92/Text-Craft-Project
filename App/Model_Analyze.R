@@ -5,9 +5,12 @@ run_lda <- function(clean_data,corpus_name,response_name,selected_ngram,selected
   #selected_ngram = 1
   #selected_number_topics = 4
   #selected_seed = 1234
-  #selected_number_words = 5
-  
+  #selected_number_words = 10
+  #clean_model <- read_csv("Data/cirque_du_soleil_clean.csv")
+  #response_name <- "Show"
+  #corpus_name <- "Text"
   #clean_data <- clean_model
+  #clean_data <- clean_data %>% mutate(id = row_number())
   
   clean_model <- clean_data %>%
     group_by(!!sym(response_name)) %>%
@@ -42,12 +45,13 @@ run_lda <- function(clean_data,corpus_name,response_name,selected_ngram,selected
   lda_res <- LDA(DocumentTermMatrix, k = selected_number_topics, control = list(seed = selected_seed))
   topic_word_density <- tidy(lda_res, matrix = "beta")
 
-
+# Beta for all topics unsupervised PLOT 2
   top_words_per_topic <- topic_word_density %>%
     group_by(topic) %>%
-    top_n(selected_number_words, beta) %>%
+    arrange(desc(beta)) %>%
+    slice(1:selected_number_words) %>%
     ungroup() %>%
-    arrange(topic, -beta)
+    arrange(topic)
 
   plot_topic_word_density <- top_words_per_topic %>%
     mutate(term = reorder_within(term, beta, topic)) %>%
@@ -55,10 +59,33 @@ run_lda <- function(clean_data,corpus_name,response_name,selected_ngram,selected
     geom_col(show.legend = FALSE) +
     facet_wrap(~ topic, scales = "free") +
     coord_flip() +
-    scale_x_reordered()+ theme_minimal() + 
-    labs(y = "Topic-Word Density (Beta)", x = "Top Words" , title = "Topic-Word Density for all topics")
+    scale_x_reordered() +
+    theme_minimal() + 
+    labs(y = "Topic-Word Density (Beta)", x = "Top Words" , title = "Unsupervised Topic-Word Density for all topics")
 
-  newlist <- list(plot_topic_word_density = plot_topic_word_density)
+  
+  # ToP TFidf for per response PLOT 1
+  top_tfidf_per_response <- clean_model %>%
+    select(!!sym(response_name), word) %>%
+    count(!!sym(response_name),word, sort = TRUE) %>%
+    bind_tf_idf(word,!!sym(response_name),n ) %>%
+    group_by(!!sym(response_name)) %>%
+    arrange(desc(tf_idf)) %>%
+    slice(1:10) %>%
+    ungroup 
+    
+    
+  plot_top_tfidf_per_response <- top_tfidf_per_response %>%
+    mutate(word = reorder(word,tf_idf), response_group = !!sym(response_name)) %>%
+    ggplot(aes(word,tf_idf,fill = response_group)) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~response_group,scales = "free") +
+    coord_flip() +
+    theme_minimal() + 
+    labs(y = "TF-IDF Scores", x = "Top Words" , title = "Top 10 Words per Response")
+    
+  newlist <- list(plot_top_tfidf_per_response = plot_top_tfidf_per_response,
+                  plot_topic_word_density = plot_topic_word_density)
 
   return(newlist)
 

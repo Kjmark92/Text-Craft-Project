@@ -10,7 +10,7 @@ test_api <- function(apilink = ""){
     maxPages <- round((initialQuery$response$meta$hits[1] / 10)-1) 
     pages <- list()
     #6 pages
-    for(i in 0:20){
+    for(i in 0:5){
       nytSearch <- fromJSON(paste0(baseurl, "&page=", i), flatten = TRUE) %>% data.frame() 
       message("Retrieving page ", i)
       pages[[i+1]] <- nytSearch 

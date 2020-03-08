@@ -98,10 +98,20 @@ body <- dashboardBody(
     tabItems(
         # homepage tab content
         tabItem(tabName="t1",
+                
                 fluidRow(
-                    box(title= span('Project Introduction',style="font-size:20px;"),
+                    box(title= span('Introduction',style="font-size:20px;"),
+                        style = "background-color:#F0F8FF; height:100px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
+                        textOutput("projinfo"),height = 120,width = 12,solidHeader = TRUE)),
+                
+                fluidRow(
+                    br(),
+                    box(title= span('Instructions',style="font-size:20px;"),
                         style = "background-color:#F0F8FF; height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
-                        textOutput("projinfo"),height = 120,width = 12,solidHeader = TRUE))),
+                        uiOutput("projinstruction"),height = 300,width = 12,solidHeader = TRUE))
+                
+                
+                ),
         
         ## second tab content
         tabItem(tabName="t2",
@@ -195,7 +205,16 @@ body <- dashboardBody(
                          
                          fluidRow(
                              br(),
-                             column(12, align = "center",withSpinner(plotOutput("t_plot1", width = "60%")),br()))),
+                             column(12, align = "center",withSpinner(plotOutput("t_plot1", width = "80%")),br())),
+                         
+                         fluidRow(
+                             br(),
+                             column(12, align = "center",withSpinner(plotOutput("t_plot2", width = "80%")),br()))
+                         
+                         
+                         
+                         
+                         ),
                 
                 tabPanel("Sentiment Analysis",
                          fluidRow(
@@ -243,6 +262,9 @@ server <- function(input, output){
                                          menuItem(text= span('Get Insights',style="font-size:18px"),tabName = "t4", icon=icon("info")),
                                          menuItem(text= span('Contact Info',style="font-size:18px"),tabName = "t5", icon= icon("address-book")) ) })   
     
+    
+    
+
     output$moreinfo1 <- renderUI({
         HTML(paste("<p>","To get more details on this project, please visit the following link-","<br>"),
              paste("<a href =","https://github.com/neonflux56/Project_EODB_MGTA452",">","Project on Github","</a>"),
@@ -252,9 +274,19 @@ server <- function(input, output){
     
     
     output$projinfo <- renderText({
-        "Welcome to the FUTURE! Conduct your own topic model and sentiment analysis. 
-          Proceed to the next tab to get started!"
+        "TextCraft delivers a framework with user-friendly interface to analyze and visualise any text corpus making it a versatile asset for unstructured text analysis. 
+        TextCraft is unique in the way that it is scalable, robust and its ease-of-interpretation, thus making it seamless even for user having minimal background in dealing with text. 
+        It uses various natural language processing algorithms in the backend, which are easily configurable, producing accurately tailored results."
     })
+    
+    
+    output$projinstruction <- renderUI({
+        HTML(paste("<p>","This tool is used as follows:","<br>"),
+             paste("<a href =","https://github.com/neonflux56/Project_EODB_MGTA452",">","Project on Github","</a>"),
+             paste("<p>","For further queries and suggestions, please contact through the below link-","<br>"),
+             paste("<a href =","https://ashishgupta.netlify.com/",">","Contact","</a>"))
+    })
+    
     
     
     #LOAD RESET reactive
@@ -333,17 +365,10 @@ server <- function(input, output){
         return(n)
     })
     
-    
-    
-    
     #TEST 
     #output$test <- renderText({
     #    number_of_responses()
     #})
-    
-    
-    
-    
     
     
     #### RUN REMOVED COLUMNS ON DATA
@@ -360,7 +385,6 @@ server <- function(input, output){
             words_to_remove2 <- unlist(strsplit(as.character(input$entered_custom_words),",",fixed=TRUE))
             words_to_remove$data <- append(words_to_remove$data ,words_to_remove1)
             words_to_remove$data <- append(words_to_remove$data ,words_to_remove2)
-            
         }
     })
     
@@ -547,6 +571,7 @@ server <- function(input, output){
                 
                 #LDA Results
                 lda_result$t_plot1 <- Run_LDA()[[1]]
+                lda_result$t_plot2 <- Run_LDA()[[2]]
                 
                 #Sentiment Results
                 sentiment_result$s_plot1 <- Run_Sentiment()[[1]]
@@ -569,6 +594,11 @@ server <- function(input, output){
                 
                 
                 # PLOT-2
+                
+                output$t_plot2 <- renderPlot({
+                    lda_result$t_plot2
+                })
+                
                 ###### Dynamic
                 output$plotsfor_s_plot2 <- renderUI({
                     plot_output_list <- lapply(1:as.numeric(number_of_responses()), function(i) {
