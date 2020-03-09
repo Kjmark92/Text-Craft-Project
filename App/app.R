@@ -477,18 +477,27 @@ server <- function(input, output){
     
     
     #GET FINAL CLEAN DATA
-    Clean_data <- reactive({
+    Clean_data_for_topic <- reactive({
         corpus_name <- input$selected_corpus
         response_name <- input$selected_response
         selected_remove_custom_words <- selected_remove_custom_words()
         df <- data.frame(table_out())
         df <- df %>% select(corpus_name,response_name)
         source("Exploratory_Analysis.R")
-        df <- get_clean_data(df,as.character(corpus_name),as.character(response_name),selected_remove_custom_words)
+        df <- get_clean_data_for_topic(df,as.character(corpus_name),as.character(response_name),selected_remove_custom_words)
         return(df)
     })
     
-    
+    Clean_data_for_sentiment <- reactive({
+        corpus_name <- input$selected_corpus
+        response_name <- input$selected_response
+        selected_remove_custom_words <- selected_remove_custom_words()
+        df <- data.frame(table_out())
+        df <- df %>% select(corpus_name,response_name)
+        source("Exploratory_Analysis.R")
+        df <- get_clean_data_for_sentiment(df,as.character(corpus_name),as.character(response_name))
+        return(df)
+    })
     
     
     
@@ -526,7 +535,7 @@ server <- function(input, output){
         selected_number_topics <- input$selected_number_topics
         corpus_name <- input$selected_corpus
         response_name <- input$selected_response
-        clean_data <- Clean_data()
+        clean_data <- Clean_data_for_topic()
         source("Model_Analyze.R")
         lda_result <- run_lda(clean_data,as.character(corpus_name),as.character(response_name),as.numeric(selected_ngram),
                               as.numeric(selected_seed),as.numeric(selected_number_words),as.numeric(selected_number_topics))
@@ -545,7 +554,7 @@ server <- function(input, output){
         selected_number_topics <- input$selected_number_topics
         corpus_name <- input$selected_corpus
         response_name <- input$selected_response
-        clean_data <- Clean_data()
+        clean_data <- Clean_data_for_sentiment()
         source("Model_Analyze.R")
         sentiment_result <- run_sentiment(clean_data,as.character(corpus_name),as.character(response_name),as.numeric(selected_ngram),
                                           as.numeric(selected_seed),as.numeric(selected_number_words),as.numeric(selected_number_topics))

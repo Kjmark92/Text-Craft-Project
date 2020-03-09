@@ -10,7 +10,7 @@ get_number_responses <- function(df,response_name){
 
 
 #Sent to reactive - Cleaned Text Corpus
-get_clean_data <- function(df,corpus_name,response_name,selected_remove_custom_words ){
+get_clean_data_for_topic <- function(df,corpus_name,response_name,selected_remove_custom_words ){
   
   #c <- read_csv("Data/cirque_du_soleil_clean.csv")
   #df <- c
@@ -47,6 +47,47 @@ get_clean_data <- function(df,corpus_name,response_name,selected_remove_custom_w
   clean_model <- clean_model %>% unite( !!sym(corpus_name),-id, -!!sym(response_name), sep =" ")
   return(clean_model)
 }
+
+
+get_clean_data_for_sentiment <- function(df,corpus_name,response_name){
+  
+  #c <- read_csv("Data/cirque_du_soleil_clean.csv")
+  #df <- c
+  #response_name <- "Show"
+  #corpus_name <- "Text"
+  
+  clean_model <- df %>%
+    mutate(id = row_number()) %>%
+    group_by(!!sym(response_name)) %>%
+    unnest_tokens(word, !!sym(corpus_name), token = "ngrams", n = 1) %>%
+    ungroup()
+  
+  clean_model$word <- gsub('[[:punct:]]+', '', clean_model$word)
+  clean_model$word <- gsub('[[:digit:]]+', '', clean_model$word)
+  
+  clean_model <- clean_model %>%
+    mutate(word = lemmatize_words(word)) %>%
+    filter(!word %in% stop_words$word, !word == "") %>%
+    ungroup()
+  
+  #selected_remove_custom_words <- c()
+  #clean_model <- clean_model %>%
+  #  filter(!word %in% c(selected_remove_custom_words))
+  
+  
+  #bring the individual words back into a text
+  clean_model <- clean_model %>% 
+    select(id, word, !!sym(response_name)) %>%
+    group_by(id) %>%
+    mutate(ind = row_number()) %>%
+    spread(key = ind, value = word)
+  
+  clean_model [is.na(clean_model)] <- ""
+  clean_model <- clean_model %>% unite( !!sym(corpus_name),-id, -!!sym(response_name), sep =" ")
+  return(clean_model)
+}
+
+
 
 
 

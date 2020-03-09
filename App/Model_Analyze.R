@@ -55,7 +55,7 @@ run_lda <- function(clean_data,corpus_name,response_name,selected_ngram,selected
 
   plot_topic_word_density <- top_words_per_topic %>%
     mutate(term = reorder_within(term, beta, topic)) %>%
-    ggplot(aes(term, beta, fill = factor(topic))) +
+    ggplot(aes(term, beta)) +
     geom_col(show.legend = FALSE) +
     facet_wrap(~ topic, scales = "free") +
     coord_flip() +
