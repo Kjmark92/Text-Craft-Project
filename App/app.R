@@ -107,7 +107,7 @@ body <- dashboardBody(
                 fluidRow(
                     br(),
                     box(title= span('Instructions',style="font-size:20px;"),
-                        style = "background-color:#F0F8FF; height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
+                        style = "background-color:#F0F8FF; height:300px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
                         uiOutput("projinstruction"),height = 300,width = 12,solidHeader = TRUE))
                 
                 
@@ -267,7 +267,7 @@ server <- function(input, output){
 
     output$moreinfo1 <- renderUI({
         HTML(paste("<p>","To get more details on this project, please visit the following link-","<br>"),
-             paste("<a href =","https://github.com/neonflux56/Project_EODB_MGTA452",">","Project on Github","</a>"),
+             paste("<a href =","https://gitlab.com/rsm-kmark/unstructured-project",">","Project on Gitlab","</a>"),
              paste("<p>","For further queries and suggestions, please contact through the below link-","<br>"),
              paste("<a href =","https://ashishgupta.netlify.com/",">","Contact","</a>"))
     })
@@ -279,13 +279,30 @@ server <- function(input, output){
         It uses various natural language processing algorithms in the backend, which are easily configurable, producing accurately tailored results."
     })
     
+   
+    
+    
+        
     
     output$projinstruction <- renderUI({
-        HTML(paste("<p>","This tool is used as follows:","<br>"),
-             paste("<a href =","https://github.com/neonflux56/Project_EODB_MGTA452",">","Project on Github","</a>"),
-             paste("<p>","For further queries and suggestions, please contact through the below link-","<br>"),
-             paste("<a href =","https://ashishgupta.netlify.com/",">","Contact","</a>"))
-    })
+        HTML(paste("<p>"," 1. Load your data: enter your API link or uploading your csv file. Click load to view the contents of your data. Select the corpus you plan to analyze. Select the feature response, which can be used to compare across documents.","<br>"),
+             
+             paste("<p>"," 2. Process your data: remove the suggested words, and any other words you wish to eliminate from the analysis. This helps to generate meaningful results. Click annotate. Adjust the configuration as needed and click analyze document corpus.
+","<br>"),
+             paste("<p>"," 3. Get insights: view your topic and sentiment analyses. Does it make sense? If not, adjust the annotation and configuration to reach your desired results.
+","<br>"),
+             paste("<p>"," To learn more about tf-idf,","<br>"),
+             paste("<a href =","http://www.tfidf.com/",">","http://www.tfidf.com/","</a>"),
+             
+             paste("<p>"," To learn more about how sentiment analysis was conducted,","<br>"),
+             paste("<a href =","https://cran.r-project.org/web/packages/sentimentr/sentimentr.pdf
+",">","https://cran.r-project.org/web/packages/sentimentr/sentimentr.pdf","</a>"),
+             paste("<p>"," To learn more about LDA,","<br>"),
+             paste("<a href =","https://towardsdatascience.com/light-on-math-machine-learning-intuitive-guide-to-latent-dirichlet-allocation-437c81220158
+             http://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf",">","https://towardsdatascience.com/light-on-math-machine-learning-intuitive-guide-to-latent-dirichlet-allocation-437c81220158
+             http://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf","</a>"))
+        
+            })
     
     
     
