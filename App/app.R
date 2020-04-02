@@ -240,8 +240,8 @@ body <- dashboardBody(
         #fifth tab
         tabItem(tabName="t5",
                 fluidRow(
-                    box(title= span('Contact Info',style="font-size:20px"), style = "background-color:#F0F8FF; height:120px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
-                        uiOutput("moreinfo1"),height = 150,width = 12,solidHeader = TRUE)))
+                    box(title= span('Contact Info',style="font-size:20px"), style = "background-color:#F0F8FF; height:400px; border-top-style: solid; border-top-width: 4px; border-top-color:#191970",
+                        uiOutput("moreinfo1"),height = 400,width = 12,solidHeader = TRUE)))
     ))
 
 
@@ -268,8 +268,28 @@ server <- function(input, output){
     output$moreinfo1 <- renderUI({
         HTML(paste("<p>","To get more details on this project, please visit the following link-","<br>"),
              paste("<a href =","https://gitlab.com/rsm-kmark/unstructured-project",">","Project on Gitlab","</a>"),
-             paste("<p>","For further queries and suggestions, please contact through the below link-","<br>"),
-             paste("<a href =","https://ashishgupta.netlify.com/",">","Contact","</a>"))
+             paste("<p>","For further queries and suggestions, please get in touch with any of the below contacts-","<br>"),
+             paste("<br>"),
+             paste("<a href =","https://ashishgupta.netlify.com/",">","Ashish Gupta","</a>","<br>"),
+             paste("ashishgupta63966@gmail.com"),
+             
+             paste("<p>","Karina Mark","<br>"),
+             paste("karina.mark@rady.ucsd.edu"),
+             
+             paste("<p>","Gino Slanzi","<br>"),
+             paste("gino.slanzi@rady.ucsd.edu"),
+             
+             paste("<p>","Sibel Goksu","<br>"),
+             paste("sibel.goksu@rady.ucsd.edu"),
+             
+             paste("<p>","Ellen P Walsh","<br>"),
+             paste("ellen.walsh@rady.ucsd.edu"),
+             
+             paste("<p>","Ghislene Adjaoute","<br>"),
+             paste("ghislene.adjaoute@rady.ucsd.edu")
+             
+             
+             )
     })
     
     
