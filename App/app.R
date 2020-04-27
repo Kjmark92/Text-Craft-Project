@@ -285,6 +285,10 @@ server <- function(input, output){
              paste("<p>","Ellen P Walsh","<br>"),
              paste("ellen.walsh@rady.ucsd.edu"),
              
+             paste("<br>"),
+             paste("<a href =","https://www.ghislene.com/",">","Ghislene Adjaoute","</a>","<br>"),
+             paste("ghislene.adjaoute@rady.ucsd.edu"),
+             
              paste("<p>","Ghislene Adjaoute","<br>"),
              paste("ghislene.adjaoute@rady.ucsd.edu")
              
